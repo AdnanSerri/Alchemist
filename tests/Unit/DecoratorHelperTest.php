@@ -5,6 +5,7 @@ namespace Serri\Alchemist\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use Serri\Alchemist\Decorators\Mutagen;
 use Serri\Alchemist\Decorators\Relation;
+use Serri\Alchemist\Exceptions\UnknownFormulaFieldException;
 use Serri\Alchemist\Helpers\DecoratorHelper;
 use Serri\Alchemist\Tests\Fixtures\Models\Author;
 use Serri\Alchemist\Tests\Fixtures\Models\Post;
@@ -15,7 +16,7 @@ class DecoratorHelperTest extends TestCase
     {
         $names = DecoratorHelper::getMethodsNamesByDecorator(Mutagen::class, new Author);
 
-        $this->assertSame(['fullName', 'is_verified'], $names);
+        $this->assertSame(['fullName', 'is_verified', 'initials'], $names);
     }
 
     public function test_it_lists_relation_names_honouring_renames(): void
@@ -51,5 +52,27 @@ class DecoratorHelperTest extends TestCase
         $method = DecoratorHelper::getMethodNameByDecorator(Mutagen::class, new Author, 'is_verified');
 
         $this->assertSame('isVerified', $method);
+    }
+
+    public function test_it_resolves_a_positional_decorator_argument(): void
+    {
+        $method = DecoratorHelper::getMethodNameByDecorator(Mutagen::class, new Author, 'initials');
+
+        $this->assertSame('makeInitials', $method);
+    }
+
+    public function test_it_throws_for_an_unknown_exposed_name(): void
+    {
+        $this->expectException(UnknownFormulaFieldException::class);
+
+        DecoratorHelper::getMethodNameByDecorator(Mutagen::class, new Author, 'nonexistent');
+    }
+
+    public function test_undecorated_methods_never_match_by_bare_name(): void
+    {
+        // 'secret' is a real method on Author, but carries no decorator.
+        $this->expectException(UnknownFormulaFieldException::class);
+
+        DecoratorHelper::getMethodNameByDecorator(Mutagen::class, new Author, 'secret');
     }
 }

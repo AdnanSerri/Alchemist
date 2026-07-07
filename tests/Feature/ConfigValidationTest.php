@@ -3,7 +3,7 @@
 namespace Serri\Alchemist\Tests\Feature;
 
 use App\Formulas\PostFormula;
-use Exception;
+use Serri\Alchemist\Exceptions\InvalidConfigurationException;
 use Serri\Alchemist\Tests\Fixtures\Models\Post;
 use Serri\Alchemist\Tests\TestCase;
 
@@ -15,7 +15,7 @@ class ConfigValidationTest extends TestCase
 
         Post::setFormula(PostFormula::Summary);
 
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessage('formulas_folder_path');
 
         alchemist()->brew($this->createPost());
@@ -27,7 +27,7 @@ class ConfigValidationTest extends TestCase
 
         Post::setFormula(PostFormula::Summary);
 
-        $this->expectException(Exception::class);
+        $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessage('ingredients');
 
         alchemist()->brew($this->createPost());

@@ -113,6 +113,12 @@ class BrewTest extends TestCase
         $this->assertSame($this->app->make('Alchemist'), $this->app->make('Alchemist'));
     }
 
+    public function test_the_class_binding_and_string_alias_resolve_the_same_singleton(): void
+    {
+        $this->assertSame($this->app->make(Alchemist::class), $this->app->make('Alchemist'));
+        $this->assertSame($this->app->make(Alchemist::class), alchemist());
+    }
+
     public function test_the_helper_returns_a_service_instance(): void
     {
         $this->assertInstanceOf(Alchemist::class, alchemist());

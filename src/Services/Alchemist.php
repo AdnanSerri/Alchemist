@@ -6,39 +6,48 @@ use Illuminate\Database\Eloquent\Collection as ECollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as SCollection;
-use ReflectionException;
 use Serri\Alchemist\Context\BrewingContext;
+use Serri\Alchemist\Exceptions\UnbrewableInputException;
 use Serri\Alchemist\Resolvers\BrewingHandlerResolver;
 use Serri\Alchemist\Support\BrewingConfigLoader;
 use Serri\Alchemist\Support\Druid;
 
 class Alchemist
 {
-    private array $configuration;
-
-    private BrewingContext $context;
-
+    /**
+     * Brewing state lives in the BrewingContext local to each call (never on
+     * the instance), so nested brews of relations can safely re-enter the
+     * same instance.
+     *
+     * @param  ECollection<int, Model>|SCollection<int|string, mixed>|Model|null  $collection
+     * @return array<int|string, mixed>
+     *
+     * @throws UnbrewableInputException
+     */
     public function brew(ECollection|SCollection|Model|null $collection): array
     {
-        if (! $collection or (($collection instanceof ECollection or $collection instanceof SCollection) and $collection->isEmpty())) {
+        if (! $collection instanceof Model && ($collection === null || $collection->isEmpty())) {
             return [];
         }
 
-        // Load 'alchemist' configuration.
-        $this->configuration = BrewingConfigLoader::load();
+        $configuration = BrewingConfigLoader::load();
 
-        // Init context.
-        $this->context = $this->initContext($collection);
+        $context = $this->initContext($collection, $configuration);
 
-        // Resolve brewing handler.
-        $handler = BrewingHandlerResolver::resolve($this->context->handler());
+        $handler = BrewingHandlerResolver::resolve($context->handler());
 
-        // Apply handler and set it back to the context.
-        $this->context->setDecoction($handler->brew($this->context));
+        $context->setDecoction($handler->brew($context));
 
-        return $this->context->decoction();
+        return $context->decoction();
     }
 
+    /**
+     * The paginator is mutated in place: its models are replaced by their
+     * brewed arrays while the pagination metadata is preserved.
+     *
+     * @param  LengthAwarePaginator<int|string, mixed>  $paginator
+     * @return LengthAwarePaginator<int|string, mixed>
+     */
     public function brewBatch(LengthAwarePaginator $paginator): LengthAwarePaginator
     {
         if (empty($paginator->items())) {
@@ -53,21 +62,26 @@ class Alchemist
     }
 
     /**
-     * @throws ReflectionException
+     * @param  ECollection<int, Model>|SCollection<int|string, mixed>|Model  $collection
+     * @param  array{formulas_folder_path: string, ingredients: array<int, class-string>}  $configuration
+     *
+     * @throws UnbrewableInputException
      */
-    private function initContext(ECollection|SCollection|Model|null $collection): BrewingContext
+    private function initContext(ECollection|SCollection|Model $collection, array $configuration): BrewingContext
     {
+        $examined = Druid::examine($collection);
 
-        // Define $sample + $handler.
-        // TODO: null check.
-        [$sample, $handler] = Druid::examine($collection);
+        if ($examined === null) {
+            throw UnbrewableInputException::nonModelItems();
+        }
 
-        // Extract $attributes + $formula.
-        [$attributes, $formula] = Druid::extract($sample, $this->configuration['ingredients']);
+        [$sample, $handler] = $examined;
+
+        [$attributes, $formula] = Druid::extract($sample, $configuration['ingredients']);
 
         return new BrewingContext(
             raw: $collection,
-            ingredients: $this->configuration['ingredients'],
+            ingredients: $configuration['ingredients'],
             attributes: $attributes,
             formula: $formula,
             handler: $handler,

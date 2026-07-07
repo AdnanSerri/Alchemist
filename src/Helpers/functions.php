@@ -2,7 +2,9 @@
 
 use Serri\Alchemist\Services\Alchemist;
 
-function alchemist(): Alchemist
-{
-    return new Alchemist;
+if (! function_exists('alchemist')) {
+    function alchemist(): Alchemist
+    {
+        return app(Alchemist::class);
+    }
 }

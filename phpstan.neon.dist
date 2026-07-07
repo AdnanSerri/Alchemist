@@ -1,9 +1,23 @@
 includes:
     - vendor/larastan/larastan/extension.neon
-    - phpstan-baseline.neon
 
 parameters:
     paths:
         - src
         - config
     level: 6
+
+    # PHPDoc types describe intent; runtime guards still validate what config
+    # and userland actually hand us.
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        # The trait is consumed by userland models, never inside src/.
+        - identifier: trait.unused
+          path: src/Concerns/HasAlchemyFormulas.php
+
+        # formula() is provided by the HasAlchemyFormulas trait; the call is
+        # guarded by method_exists, but PHPStan cannot see trait statics.
+        - identifier: method.staticCall
+          path: src/Support/Druid.php
+          count: 1

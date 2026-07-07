@@ -9,16 +9,16 @@ trait HasAlchemyFormulas
     private const DEFAULT_FORMULA_CONST_NAME = 'BlankParchment';
 
     /**
-     * static property that modifies the model's JSON representation.
+     * Active formulas, keyed by model class.
+     *
+     * @var array<class-string, array<int, string>>
      */
     protected static array $formulas = [];
 
     /**
-     * Set the static property formula array.
+     * Set the model's active formula.
      *
-     * @param  array  $formula  The formula array.
-     *
-     * @returns void
+     * @param  array<int, string>  $formula
      */
     public static function setFormula(array $formula): void
     {
@@ -26,7 +26,18 @@ trait HasAlchemyFormulas
     }
 
     /**
-     * Get the static property formula array.
+     * Clear the model's active formula so it falls back to BlankParchment.
+     */
+    public static function unsetFormula(): void
+    {
+        unset(static::$formulas[static::class]);
+    }
+
+    /**
+     * Get the model's active formula, falling back to the nearest
+     * BlankParchment constant.
+     *
+     * @return array<int, string>
      */
     public static function formula(): array
     {
@@ -35,15 +46,14 @@ trait HasAlchemyFormulas
 
     private static function getDefaultFormulasClass(): string
     {
-
         $modelDefaultFormulaClass = 'App\\Formulas\\'.(class_basename(static::class)).'Formula';
         $defaultFormulaClass = 'App\\Formulas\\Formula';
 
-        if (class_exists($modelDefaultFormulaClass) and static::hasBlankParchmentConstant($modelDefaultFormulaClass)) {
+        if (class_exists($modelDefaultFormulaClass) && static::hasBlankParchmentConstant($modelDefaultFormulaClass)) {
             return $modelDefaultFormulaClass;
         }
 
-        if (class_exists($defaultFormulaClass) and static::hasBlankParchmentConstant($defaultFormulaClass)) {
+        if (class_exists($defaultFormulaClass) && static::hasBlankParchmentConstant($defaultFormulaClass)) {
             return $defaultFormulaClass;
         }
 
