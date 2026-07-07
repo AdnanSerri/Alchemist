@@ -3,12 +3,15 @@
 namespace Serri\Alchemist\Facades;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Pagination\AbstractCursorPaginator;
+use Illuminate\Pagination\AbstractPaginator;
 use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static array<int|string, mixed> brew(\Illuminate\Support\Collection<int|string, mixed>|\Illuminate\Database\Eloquent\Collection<int, Model>|Model|null $collection, array<int|string, mixed>|null $formula = null)
- * @method static LengthAwarePaginator<int|string, mixed> brewBatch(LengthAwarePaginator<int|string, mixed> $paginator, array<int|string, mixed>|null $formula = null)
+ * @method static AbstractPaginator<int|string, mixed>|AbstractCursorPaginator<int|string, mixed> brewBatch(AbstractPaginator<int|string, mixed>|AbstractCursorPaginator<int|string, mixed> $paginator, array<int|string, mixed>|null $formula = null)
+ * @method static JsonResponse response(\Illuminate\Support\Collection<int|string, mixed>|\Illuminate\Database\Eloquent\Collection<int, Model>|Model|AbstractPaginator<int|string, mixed>|AbstractCursorPaginator<int|string, mixed>|null $input, array<int|string, mixed>|null $formula = null, int $status = 200, array<string, string> $headers = [])
  */
 class Alchemist extends Facade
 {
