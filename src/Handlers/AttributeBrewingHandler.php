@@ -7,11 +7,9 @@ use Serri\Alchemist\Context\BrewingContext;
 
 /**
  * @internal
- * 
  */
 class AttributeBrewingHandler
 {
-
     /**
      * @throws Exception
      */
@@ -19,8 +17,9 @@ class AttributeBrewingHandler
     {
         $ingredientClass = $context->attributes()[$element];
 
-        if (!class_exists($ingredientClass) or !method_exists($ingredientClass, 'infuse'))
+        if (! class_exists($ingredientClass) or ! method_exists($ingredientClass, 'infuse')) {
             throw new Exception("Ingredient called '$ingredientClass' is not existed, or $ingredientClass::infuse is not existed");
+        }
 
         return $ingredientClass::infuse($element, $brewing);
     }

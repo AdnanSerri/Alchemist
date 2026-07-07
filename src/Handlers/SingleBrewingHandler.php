@@ -7,11 +7,9 @@ use Serri\Alchemist\Contracts\BrewingHandlerContract;
 
 /**
  * @internal
- * 
  */
 class SingleBrewingHandler implements BrewingHandlerContract
 {
-
     public function brew(BrewingContext $context): array
     {
         $decoction = [];

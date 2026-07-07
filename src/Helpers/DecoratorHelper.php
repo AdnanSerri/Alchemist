@@ -16,7 +16,7 @@ class DecoratorHelper
             function (ReflectionMethod $m) use ($decorator, $providedName) {
                 if (count($m->getAttributes($decorator)) > 0) {
                     $attr = $m->getAttributes($decorator)[0];
-                    if (!empty($attr->getArguments())) {
+                    if (! empty($attr->getArguments())) {
                         return $attr->getArguments()['name'] === $providedName;
                     }
                 }
@@ -32,9 +32,9 @@ class DecoratorHelper
 
         $methods = array_values(array_filter(
             $ref->getMethods(),
-            fn(ReflectionMethod $m) => count(
-                    $m->getAttributes($decorator)
-                ) > 0
+            fn (ReflectionMethod $m) => count(
+                $m->getAttributes($decorator)
+            ) > 0
         ));
 
         $methodsNames = [];
@@ -45,10 +45,11 @@ class DecoratorHelper
          */
         foreach ($methods as $method) {
             $methodAttr = $method->getAttributes($decorator)[0];
-            if (!empty($methodAttr->getArguments()))
+            if (! empty($methodAttr->getArguments())) {
                 $methodsNames[] = $methodAttr->getArguments()['name'];
-            else
+            } else {
                 $methodsNames[] = $method->getName();
+            }
         }
 
         return $methodsNames;

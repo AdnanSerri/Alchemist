@@ -1,13 +1,12 @@
 <?php
 
-
 namespace Serri\Alchemist\Ingredients;
 
 use Closure;
+use ReflectionClass;
 use Serri\Alchemist\Contracts\IngredientContract;
 use Serri\Alchemist\Decorators\Mutagen;
 use Serri\Alchemist\Helpers\DecoratorHelper;
-use ReflectionClass;
 
 final class MutagenIngredient implements IngredientContract
 {
@@ -26,7 +25,7 @@ final class MutagenIngredient implements IngredientContract
         $mutagenInteraction = self::getMutagenPropertyClosure($brewing, $ingredient);
 
         return [
-            $ingredient => $mutagenInteraction()
+            $ingredient => $mutagenInteraction(),
         ];
     }
 

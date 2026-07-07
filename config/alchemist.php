@@ -1,5 +1,10 @@
 <?php
 
+use Serri\Alchemist\Ingredients\FillableIngredient;
+use Serri\Alchemist\Ingredients\GuardedIngredient;
+use Serri\Alchemist\Ingredients\MutagenIngredient;
+use Serri\Alchemist\Ingredients\RelationIngredient;
+
 return [
 
     /*
@@ -37,11 +42,11 @@ return [
     */
 
     'ingredients' => [
-        \Serri\Alchemist\Ingredients\FillableIngredient::class,
-        \Serri\Alchemist\Ingredients\GuardedIngredient::class,
-        \Serri\Alchemist\Ingredients\MutagenIngredient::class,
-        \Serri\Alchemist\Ingredients\RelationIngredient::class,
+        FillableIngredient::class,
+        GuardedIngredient::class,
+        MutagenIngredient::class,
+        RelationIngredient::class,
 
-        # Custom Ingredients goes here...
-    ]
+        // Custom Ingredients goes here...
+    ],
 ];
