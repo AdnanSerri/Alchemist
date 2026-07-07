@@ -181,15 +181,27 @@ final class Sieve
         $tree = [];
 
         foreach (self::csv($value) as $path) {
-            $node = &$tree;
-
-            foreach (explode('.', $path) as $segment) {
-                $node[$segment] ??= [];
-                $node = &$node[$segment];
-            }
-
-            unset($node);
+            $tree = self::graft($tree, explode('.', $path));
         }
+
+        return $tree;
+    }
+
+    /**
+     * @param  array<string, mixed>  $tree
+     * @param  array<int, string>  $segments
+     * @return array<string, mixed>
+     */
+    private static function graft(array $tree, array $segments): array
+    {
+        if ($segments === []) {
+            return $tree;
+        }
+
+        $head = array_shift($segments);
+        $branch = is_array($tree[$head] ?? null) ? $tree[$head] : [];
+
+        $tree[$head] = self::graft($branch, $segments);
 
         return $tree;
     }
