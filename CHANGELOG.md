@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-07
+
 ### Added
 
 - **Per-call formulas**: `brew($models, PostFormula::Author)` and `brewBatch($paginator, $formula)` accept the formula directly — no global state involved. A per-call formula wins over `setFormula()` for that call only.
