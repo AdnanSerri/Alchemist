@@ -162,4 +162,18 @@ class DruidTest extends TestCase
 
         Post::unsetFormula();
     }
+
+    public function test_extract_excludes_hidden_fields_by_default(): void
+    {
+        [$attributes] = Druid::extract(new Author, self::INGREDIENTS);
+
+        $this->assertArrayNotHasKey('secret_token', $attributes);
+    }
+
+    public function test_extract_can_include_hidden_fields_when_asked(): void
+    {
+        [$attributes] = Druid::extract(new Author, self::INGREDIENTS, respectHidden: false);
+
+        $this->assertSame(FillableIngredient::class, $attributes['secret_token']);
+    }
 }

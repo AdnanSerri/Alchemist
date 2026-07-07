@@ -9,6 +9,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 - **`php artisan formula:lint`** — validates every formula constant against its model (including nested specs, resolved through the relation's related model) using the same discovery the brew pipeline uses. Unknown fields fail with a "did you mean" suggestion and a non-zero exit code for CI; `--json` for tooling; models matched by convention or via `protected static string $model`.
 
+### Changed
+
+- **`$hidden` is now respected** (config `respect_hidden`, default `true`): fields in a model's `$hidden` property are never exposed to formulas, matching Eloquent's serialisation contract. A formula referencing a hidden field throws `UnknownFormulaFieldException` with a hidden-specific message; `formula:lint` flags it and `make:formula --model` no longer scaffolds hidden fields. Set `alchemist.respect_hidden` to `false` to restore the previous behaviour.
+
 ## [1.3.0] - 2026-07-07
 
 ### Added

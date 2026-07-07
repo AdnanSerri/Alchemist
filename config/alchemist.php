@@ -49,4 +49,18 @@ return [
 
         // Custom Ingredients goes here...
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Respect $hidden
+    |--------------------------------------------------------------------------
+    |
+    | When enabled (the default), fields listed in a model's $hidden property
+    | are never exposed to formulas — matching Eloquent's own serialisation
+    | contract. A formula referencing a hidden field throws with a clear
+    | message. Disable only if you deliberately brew hidden attributes.
+    |
+    */
+
+    'respect_hidden' => true,
 ];

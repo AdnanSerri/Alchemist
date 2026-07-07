@@ -79,7 +79,11 @@ class MakeFormulaCommand extends Command
             return null;
         }
 
-        [$attributes] = Druid::extract(new $modelClass, config('alchemist.ingredients'));
+        [$attributes] = Druid::extract(
+            new $modelClass,
+            config('alchemist.ingredients'),
+            config('alchemist.respect_hidden', true),
+        );
 
         $fields = [];
         $hints = [];

@@ -28,7 +28,7 @@ class AttributeBrewingHandler
         ?array $nestedFormula = null,
     ): array {
         $ingredientClass = $context->attributes()[$element]
-            ?? throw UnknownFormulaFieldException::forField($element, get_class($context->sample()));
+            ?? throw self::unknownField($context, $element);
 
         if (! class_exists($ingredientClass) || ! method_exists($ingredientClass, 'infuse')) {
             throw InvalidIngredientException::forClass($ingredientClass);
@@ -43,5 +43,14 @@ class AttributeBrewingHandler
         }
 
         return $ingredientClass::infuseWithFormula($element, $brewing, $nestedFormula);
+    }
+
+    private static function unknownField(BrewingContext $context, string $element): UnknownFormulaFieldException
+    {
+        $model = get_class($context->sample());
+
+        return in_array($element, $context->sample()->getHidden(), true)
+            ? UnknownFormulaFieldException::forHiddenField($element, $model)
+            : UnknownFormulaFieldException::forField($element, $model);
     }
 }
