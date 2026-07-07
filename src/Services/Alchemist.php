@@ -76,6 +76,33 @@ class Alchemist
     }
 
     /**
+     * Brew a heterogeneous collection: each element is brewed with its own
+     * class's formula, order preserved. Per-class formulas can be pinned via
+     * $formulaMap ([Post::class => [...]]); omitted classes fall back to
+     * their active formula / BlankParchment as usual.
+     *
+     * @param  ECollection<int, Model>|SCollection<int|string, mixed>  $collection
+     * @param  array<class-string, array<int|string, mixed>>  $formulaMap
+     * @return array<int, array<int|string, mixed>>
+     *
+     * @throws UnbrewableInputException
+     */
+    public function brewMixed(ECollection|SCollection $collection, array $formulaMap = []): array
+    {
+        $decoction = [];
+
+        foreach ($collection as $item) {
+            if (! $item instanceof Model) {
+                throw UnbrewableInputException::nonModelItems();
+            }
+
+            $decoction[] = $this->brew($item, $formulaMap[get_class($item)] ?? null);
+        }
+
+        return $decoction;
+    }
+
+    /**
      * Brew straight into a JsonResponse. Paginators keep their pagination
      * envelope; models and collections return the brewed array.
      *
@@ -116,6 +143,10 @@ class Alchemist
 
         [$sample, $handler] = $examined;
 
+        if ($handler === 'multiple') {
+            $this->guardHomogeneity($collection, $sample);
+        }
+
         [$attributes, $activeFormula] = Druid::extract(
             $sample,
             $configuration['ingredients'],
@@ -130,5 +161,29 @@ class Alchemist
             handler: $handler,
             sample: $sample,
         );
+    }
+
+    /**
+     * brew() derives the attribute map and formula from the first model, so
+     * every element must share its class. Heterogeneous collections belong
+     * to brewMixed().
+     *
+     * @param  ECollection<int, Model>|SCollection<int|string, mixed>|Model  $collection
+     *
+     * @throws UnbrewableInputException
+     */
+    private function guardHomogeneity(ECollection|SCollection|Model $collection, Model $sample): void
+    {
+        $class = get_class($sample);
+
+        foreach ($collection as $item) {
+            if (! $item instanceof Model) {
+                throw UnbrewableInputException::nonModelItems();
+            }
+
+            if (get_class($item) !== $class) {
+                throw UnbrewableInputException::mixedModels();
+            }
+        }
     }
 }
