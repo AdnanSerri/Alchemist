@@ -117,4 +117,49 @@ class DruidTest extends TestCase
 
         $this->assertNotContains(UppercaseIngredient::class, $attributes);
     }
+
+    public function test_the_attribute_map_cache_is_keyed_by_ingredient_list(): void
+    {
+        [$without] = Druid::extract(new Post, self::INGREDIENTS);
+        [$with] = Druid::extract(new Post, array_merge(self::INGREDIENTS, [UppercaseIngredient::class]));
+
+        $this->assertSame(FillableIngredient::class, $without['title']);
+        $this->assertSame(UppercaseIngredient::class, $with['title']);
+    }
+
+    public function test_the_attribute_map_is_cached_per_class_until_flushed(): void
+    {
+        Druid::flushCache();
+
+        [$before] = Druid::extract(new Potion, self::INGREDIENTS);
+        $this->assertArrayNotHasKey('colour', $before);
+
+        // Instance-level mutation after the first extract is intentionally
+        // invisible: field exposure is cached per class, not per instance.
+        $mutated = new Potion;
+        $mutated->fillable(['name', 'colour']);
+
+        [$cached] = Druid::extract($mutated, self::INGREDIENTS);
+        $this->assertArrayNotHasKey('colour', $cached);
+
+        Druid::flushCache();
+
+        [$fresh] = Druid::extract($mutated, self::INGREDIENTS);
+        $this->assertSame(FillableIngredient::class, $fresh['colour']);
+
+        Druid::flushCache(); // don't leak the mutated map into other tests
+    }
+
+    public function test_the_formula_is_never_cached(): void
+    {
+        [, $before] = Druid::extract(new Post, self::INGREDIENTS);
+        $this->assertSame(PostFormula::BlankParchment, $before);
+
+        Post::setFormula(PostFormula::Detailed);
+
+        [, $after] = Druid::extract(new Post, self::INGREDIENTS);
+        $this->assertSame(PostFormula::Detailed, $after);
+
+        Post::unsetFormula();
+    }
 }

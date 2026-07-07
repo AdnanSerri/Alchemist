@@ -2,13 +2,21 @@
 
 namespace Serri\Alchemist\Helpers;
 
-use ReflectionAttribute;
 use ReflectionClass;
-use ReflectionMethod;
 use Serri\Alchemist\Exceptions\UnknownFormulaFieldException;
 
 class DecoratorHelper
 {
+    /**
+     * Exposed-name maps (exposed field name => real method name), keyed by
+     * "class|decorator". Class structure is immutable at runtime, so these
+     * are computed once per class per decorator and are safe to keep across
+     * requests (Octane included).
+     *
+     * @var array<string, array<string, string>>
+     */
+    private static array $exposedNameMaps = [];
+
     /**
      * Resolve the real method name behind an exposed field name.
      *
@@ -18,21 +26,8 @@ class DecoratorHelper
      */
     public static function getMethodNameByDecorator(string $decorator, mixed $object, string $providedName): string
     {
-        $ref = new ReflectionClass($object);
-
-        foreach ($ref->getMethods() as $method) {
-            $attributes = $method->getAttributes($decorator);
-
-            if ($attributes === []) {
-                continue;
-            }
-
-            if (self::exposedName($attributes[0], $method) === $providedName) {
-                return $method->getName();
-            }
-        }
-
-        throw UnknownFormulaFieldException::forField($providedName, get_class($object));
+        return self::exposedNameMap($decorator, $object)[$providedName]
+            ?? throw UnknownFormulaFieldException::forField($providedName, get_class($object));
     }
 
     /**
@@ -43,31 +38,49 @@ class DecoratorHelper
      */
     public static function getMethodsNamesByDecorator(string $decorator, mixed $object): array
     {
-        $ref = new ReflectionClass($object);
+        return array_keys(self::exposedNameMap($decorator, $object));
+    }
 
-        $methodsNames = [];
+    public static function flushCache(): void
+    {
+        self::$exposedNameMaps = [];
+    }
 
-        foreach ($ref->getMethods() as $method) {
+    /**
+     * @param  class-string  $decorator
+     * @return array<string, string>
+     */
+    private static function exposedNameMap(string $decorator, mixed $object): array
+    {
+        $key = get_class($object).'|'.$decorator;
+
+        return self::$exposedNameMaps[$key] ??= self::buildExposedNameMap($decorator, $object);
+    }
+
+    /**
+     * Scan the class once: the name a decorated method is exposed under is
+     * the decorator's `name` argument (named or positional) when given,
+     * otherwise the method name. First declaration wins on collisions.
+     *
+     * @param  class-string  $decorator
+     * @return array<string, string>
+     */
+    private static function buildExposedNameMap(string $decorator, mixed $object): array
+    {
+        $map = [];
+
+        foreach ((new ReflectionClass($object))->getMethods() as $method) {
             $attributes = $method->getAttributes($decorator);
 
             if ($attributes === []) {
                 continue;
             }
 
-            $methodsNames[] = self::exposedName($attributes[0], $method);
+            $exposedName = $attributes[0]->newInstance()->name ?? $method->getName();
+
+            $map[$exposedName] ??= $method->getName();
         }
 
-        return $methodsNames;
-    }
-
-    /**
-     * The name a decorated method is exposed under: the decorator's `name`
-     * argument (named or positional) when given, otherwise the method name.
-     *
-     * @param  ReflectionAttribute<object>  $attribute
-     */
-    private static function exposedName(ReflectionAttribute $attribute, ReflectionMethod $method): string
-    {
-        return $attribute->newInstance()->name ?? $method->getName();
+        return $map;
     }
 }

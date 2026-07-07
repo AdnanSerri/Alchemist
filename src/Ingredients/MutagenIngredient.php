@@ -2,7 +2,6 @@
 
 namespace Serri\Alchemist\Ingredients;
 
-use Closure;
 use ReflectionClass;
 use Serri\Alchemist\Contracts\IngredientContract;
 use Serri\Alchemist\Decorators\Mutagen;
@@ -22,19 +21,11 @@ final class MutagenIngredient implements IngredientContract
 
     public static function infuse(string $ingredient, mixed $brewing): array
     {
-        $mutagenInteraction = self::getMutagenPropertyClosure($brewing, $ingredient);
+        $methodName = DecoratorHelper::getMethodNameByDecorator(self::ingredientName(), $brewing, $ingredient);
 
+        // Invoked through reflection so non-public mutagen methods keep working.
         return [
-            $ingredient => $mutagenInteraction(),
+            $ingredient => (new ReflectionClass($brewing))->getMethod($methodName)->invoke($brewing),
         ];
-    }
-
-    private static function getMutagenPropertyClosure(mixed $brewing, string $mutagen): Closure
-    {
-        $mutagensMethodName = DecoratorHelper::getMethodNameByDecorator(self::ingredientName(), $brewing, $mutagen);
-
-        return (new ReflectionClass($brewing))
-            ->getMethod($mutagensMethodName)
-            ->getClosure($brewing);
     }
 }

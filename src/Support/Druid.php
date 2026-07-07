@@ -40,8 +40,22 @@ final class Druid
     }
 
     /**
+     * Attribute maps keyed by "class|ingredient,ingredient,...". Rebuilding
+     * one costs a full reflection pass, and nested relation brews would
+     * otherwise pay it once per row. Field exposure is derived from class
+     * structure, so the cache is safe across requests; instance-level
+     * mutations of $fillable / $guarded after the first brew of a class are
+     * not picked up (call flushCache() if you really do that).
+     *
+     * @var array<string, array<string, class-string<IngredientContract>>>
+     */
+    private static array $attributeMaps = [];
+
+    /**
      * Build the attribute map (exposed field name => ingredient class) and
-     * fetch the sample model's active formula.
+     * fetch the sample model's active formula. The map is cached per model
+     * class and ingredient list; the formula is read fresh on every call,
+     * as it changes at runtime via setFormula().
      *
      * @param  array<int, class-string<IngredientContract>>  $ingredients
      * @return array{0: array<string, class-string<IngredientContract>>, 1: array<int, string>}
@@ -54,6 +68,26 @@ final class Druid
             throw UnbrewableInputException::missingTrait(get_class($sample));
         }
 
+        $key = get_class($sample).'|'.implode(',', $ingredients);
+
+        $attributes = self::$attributeMaps[$key] ??= self::buildAttributeMap($sample, $ingredients);
+
+        $formula = $sample::formula();
+
+        return [$attributes, $formula];
+    }
+
+    public static function flushCache(): void
+    {
+        self::$attributeMaps = [];
+    }
+
+    /**
+     * @param  array<int, class-string<IngredientContract>>  $ingredients
+     * @return array<string, class-string<IngredientContract>>
+     */
+    private static function buildAttributeMap(Model $sample, array $ingredients): array
+    {
         $reflection = new ReflectionClass($sample);
 
         $attributes = [];
@@ -68,9 +102,7 @@ final class Druid
             $attributes = array_merge($attributes, array_fill_keys($fieldNames, $ingredient));
         }
 
-        $formula = $sample::formula();
-
-        return [$attributes, $formula];
+        return $attributes;
     }
 
     /**

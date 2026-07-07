@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Performance
+
+- Decorator scans (`#[Mutagen]` / `#[Relation]` method maps) are now computed once per model class instead of once per field per row.
+- The attribute map (field → ingredient) is cached per model class and ingredient list; previously nested relation brews rebuilt it for every row. The active formula is never cached.
+- `Druid::flushCache()` and `DecoratorHelper::flushCache()` are available for the rare case of mutating a model's `$fillable` / `$guarded` at runtime.
+- Mutagen invocation no longer constructs a bound closure per field per row.
+
 ## [1.1.0] - 2026-07-07
 
 ### Added
