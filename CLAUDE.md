@@ -53,11 +53,13 @@ Ingredients that opt into attribute-scanning declare `usesDecorator(): bool` ret
 
 ### Formula selection
 
-Precedence per brew: **per-call formula argument** → nested spec from the parent formula (for relations) → the model's active formula (`setFormula()`) → `BlankParchment` fallback, resolved in order: `App\Formulas\{Model}Formula` → `App\Formulas\Formula` → the package's `Formulas\Formula` (`['id']`).
+Precedence per brew: **per-call formula argument** → nested spec from the parent formula (for relations) → the model's active formula (`setFormula()`) → `BlankParchment` fallback, resolved per namespace in `config('alchemist.formula_namespaces')` (default `['App\Formulas']`, held on `FormulaRegistry` so the trait stays container-free): `{NS}\{Model}Formula` → `{NS}\Formula` → the package's `Formulas\Formula` (`['id']`).
 
 Models opt in with the `Concerns\HasAlchemyFormulas` trait. `Model::setFormula()` stores state in the central `Support\FormulaRegistry` (static, keyed by model class). When Laravel Octane is present, the service provider flushes the registry on Octane's `RequestReceived` event, so formulas cannot leak between requests on long-lived workers (tested via a classmap fixture stand-in for the Octane event class in `tests/Fixtures/Octane/`).
 
-`php artisan make:formula {name} {--model=} {--force}` (`Console\MakeFormulaCommand`) scaffolds formula classes into `formulas_folder_path`, scanning the model through the same `Druid` discovery when `--model` is given.
+Fields in a model's `$hidden` never enter the attribute map (config `respect_hidden`, default true; part of the Druid cache key). `brew()` requires homogeneous collections and fails fast on mixed ones — `brewMixed($collection, $formulaMap)` handles those per element. `Support\Sieve::from($request, $allowList)` builds a formula from `fields`/`include`/`fields[relation]` query params, always capped by the allow-list (`Sieve::strict()` throws instead of dropping).
+
+Console commands (`Console\`): `make:formula {name} {--model=} {--force}` scaffolds formula classes into `formulas_folder_path` (first configured namespace), scanning the model through the same `Druid` discovery when `--model` is given; `formula:lint {--json}` validates every formula constant against its model (convention or `protected static string $model`), recursing nested specs via the relation's `getRelated()` — keep it consistent with runtime by always resolving through `Druid`.
 
 ### Registration
 

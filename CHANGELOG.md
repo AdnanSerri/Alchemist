@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-07-07
+
 ### Added
 
 - **`Alchemist::brewMixed($collection, $formulaMap = [])`** — brews heterogeneous collections (feeds, search results, morph queries): each element uses its own class's formula, order preserved; per-class formulas can be pinned via the map.
