@@ -190,6 +190,19 @@ class UserFormula extends Formula
 > - #### Each model deserves its own formula class `ModelNameFormula.php` <br>
 > - #### The `BlankParchment` remains your fallback option.
 
+### Modular Codebases
+
+Fallback resolution searches `App\Formulas` by convention. Modular / DDD apps can add their own namespaces
+(searched in order — the first entry is also where `make:formula` generates classes):
+
+```php
+// config/alchemist.php
+'formula_namespaces' => [
+    'Modules\\Blog\\Formulas',
+    'App\\Formulas',
+],
+```
+
 ### Using the package's default Formula
 
 If you did not publish `app/Formulas/Formula.php`, you can still extend the default `Formula` provided by the package

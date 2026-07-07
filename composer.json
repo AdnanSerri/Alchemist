@@ -35,6 +35,7 @@
     },
     "classmap": [
       "tests/Fixtures/Formulas",
+      "tests/Fixtures/ModuleFormulas",
       "tests/Fixtures/Octane"
     ]
   },

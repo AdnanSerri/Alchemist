@@ -13,6 +13,10 @@ class AlchemistServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        FormulaRegistry::setNamespaces(
+            config('alchemist.formula_namespaces', ['App\\Formulas'])
+        );
+
         $this->registerPublishing();
 
         $this->registerOctaneFlush();

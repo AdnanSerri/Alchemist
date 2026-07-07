@@ -40,15 +40,22 @@ trait HasAlchemyFormulas
 
     private static function getDefaultFormulasClass(): string
     {
-        $modelDefaultFormulaClass = 'App\\Formulas\\'.(class_basename(static::class)).'Formula';
-        $defaultFormulaClass = 'App\\Formulas\\Formula';
+        $basename = class_basename(static::class).'Formula';
 
-        if (class_exists($modelDefaultFormulaClass) && static::hasBlankParchmentConstant($modelDefaultFormulaClass)) {
-            return $modelDefaultFormulaClass;
+        foreach (FormulaRegistry::namespaces() as $namespace) {
+            $candidate = $namespace.'\\'.$basename;
+
+            if (class_exists($candidate) && static::hasBlankParchmentConstant($candidate)) {
+                return $candidate;
+            }
         }
 
-        if (class_exists($defaultFormulaClass) && static::hasBlankParchmentConstant($defaultFormulaClass)) {
-            return $defaultFormulaClass;
+        foreach (FormulaRegistry::namespaces() as $namespace) {
+            $candidate = $namespace.'\\Formula';
+
+            if (class_exists($candidate) && static::hasBlankParchmentConstant($candidate)) {
+                return $candidate;
+            }
         }
 
         return Formula::class;
