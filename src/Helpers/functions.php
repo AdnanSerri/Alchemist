@@ -1,6 +1,8 @@
 <?php
 
-function alchemist(): \Serri\Alchemist\Services\Alchemist
+use Serri\Alchemist\Services\Alchemist;
+
+function alchemist(): Alchemist
 {
-    return new \Serri\Alchemist\Services\Alchemist();
+    return new Alchemist;
 }

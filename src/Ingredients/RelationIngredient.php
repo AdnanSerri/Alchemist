@@ -24,7 +24,7 @@ final class RelationIngredient implements IngredientContract
         $relationName = self::getRelationName($brewing, $ingredient);
 
         return [
-            $ingredient => (new Alchemist())->brew($brewing->$relationName)
+            $ingredient => (new Alchemist)->brew($brewing->$relationName),
         ];
     }
 

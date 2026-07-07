@@ -3,34 +3,37 @@
 namespace Serri\Alchemist\Context;
 
 use Illuminate\Database\Eloquent\Collection as ECollection;
-use Illuminate\Support\Collection as SCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection as SCollection;
 
 /**
  * @internal
- * 
  */
 class BrewingContext
 {
     private ECollection|SCollection|Model|null $raw;
 
     private array $ingredients;
+
     private array $attributes;
+
     private array $formula;
+
     private array $decoction;
+
     private string $handler;
+
     private ?Model $sample;
 
     public function __construct(
         ECollection|SCollection|Model|null $raw,
-        array                              $ingredients = [],
-        array                              $attributes = [],
-        array                              $formula = [],
-        string                             $handler = 'single',
-        ?Model                             $sample = null,
-        array                              $decoction = [],
-    )
-    {
+        array $ingredients = [],
+        array $attributes = [],
+        array $formula = [],
+        string $handler = 'single',
+        ?Model $sample = null,
+        array $decoction = [],
+    ) {
         $this->raw = $raw;
         $this->ingredients = $ingredients;
         $this->attributes = $attributes;

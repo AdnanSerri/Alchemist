@@ -9,15 +9,14 @@ use Serri\Alchemist\Handlers\SingleBrewingHandler;
 
 /**
  * @internal
- * 
  */
 class BrewingHandlerResolver
 {
     public static function resolve(string $handler): BrewingHandlerContract
     {
         return match ($handler) {
-            'single' => new SingleBrewingHandler(),
-            'multiple' => new MultipleBrewingHandler(),
+            'single' => new SingleBrewingHandler,
+            'multiple' => new MultipleBrewingHandler,
             default => throw new InvalidArgumentException("Unknown brewing handler: $handler"),
         };
     }

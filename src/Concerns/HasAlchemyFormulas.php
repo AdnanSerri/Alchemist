@@ -15,7 +15,9 @@ trait HasAlchemyFormulas
 
     /**
      * Set the static property formula array.
-     * @param array $formula The formula array.
+     *
+     * @param  array  $formula  The formula array.
+     *
      * @returns void
      */
     public static function setFormula(array $formula): void
@@ -25,7 +27,6 @@ trait HasAlchemyFormulas
 
     /**
      * Get the static property formula array.
-     * @return array
      */
     public static function formula(): array
     {
@@ -35,14 +36,16 @@ trait HasAlchemyFormulas
     private static function getDefaultFormulasClass(): string
     {
 
-        $modelDefaultFormulaClass = 'App\\Formulas\\' . (class_basename(static::class)) . 'Formula';
+        $modelDefaultFormulaClass = 'App\\Formulas\\'.(class_basename(static::class)).'Formula';
         $defaultFormulaClass = 'App\\Formulas\\Formula';
 
-        if (class_exists($modelDefaultFormulaClass) and static::hasBlankParchmentConstant($modelDefaultFormulaClass))
+        if (class_exists($modelDefaultFormulaClass) and static::hasBlankParchmentConstant($modelDefaultFormulaClass)) {
             return $modelDefaultFormulaClass;
+        }
 
-        if (class_exists($defaultFormulaClass) and static::hasBlankParchmentConstant($defaultFormulaClass))
+        if (class_exists($defaultFormulaClass) and static::hasBlankParchmentConstant($defaultFormulaClass)) {
             return $defaultFormulaClass;
+        }
 
         return Formula::class;
     }

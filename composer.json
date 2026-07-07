@@ -1,6 +1,5 @@
 {
   "name": "serri/alchemist",
-  "version": "1.0.3",
   "description": "The JSON Revolution for Laravel, a simple, fast, and elegant alternative to Laravel JSON Resource. ",
   "license": "MIT",
   "authors": [
@@ -10,10 +9,17 @@
     }
   ],
   "require": {
-    "php": "^8.2"
+    "php": "^8.2",
+    "illuminate/contracts": "^12.0|^13.0",
+    "illuminate/database": "^12.0|^13.0",
+    "illuminate/pagination": "^12.0|^13.0",
+    "illuminate/support": "^12.0|^13.0"
   },
   "require-dev": {
-    "orchestra/testbench": "^10.2.1"
+    "larastan/larastan": "^3.0",
+    "laravel/pint": "^1.14",
+    "orchestra/testbench": "^10.0|^11.0",
+    "phpunit/phpunit": "^11.5|^12.0"
   },
   "autoload": {
     "psr-4": {
@@ -26,8 +32,22 @@
   "autoload-dev": {
     "psr-4": {
       "Serri\\Alchemist\\Tests\\": "tests/"
-    }
+    },
+    "classmap": [
+      "tests/Fixtures/Formulas"
+    ]
   },
+  "scripts": {
+    "test": "phpunit",
+    "lint": "pint --test",
+    "fix": "pint",
+    "analyse": "phpstan analyse --memory-limit=1G"
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
   "extra": {
     "laravel": {
       "providers": [

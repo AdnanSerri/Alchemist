@@ -3,37 +3,35 @@
 namespace Serri\Alchemist\Support;
 
 use Illuminate\Database\Eloquent\Collection as ECollection;
-use Illuminate\Support\Collection as SCollection;
 use Illuminate\Database\Eloquent\Model;
-use Serri\Alchemist\Contracts\IngredientContract;
-use Serri\Alchemist\Helpers\DecoratorHelper;
+use Illuminate\Support\Collection as SCollection;
 use ReflectionClass;
 use ReflectionException;
+use Serri\Alchemist\Contracts\IngredientContract;
+use Serri\Alchemist\Helpers\DecoratorHelper;
 
 /**
  * @internal
- * 
  */
 final class Druid
 {
-    /**
-     * @param ECollection|SCollection|Model|null $collection
-     * @return array|null
-     */
     public static function examine(ECollection|SCollection|Model|null $collection): ?array
     {
-        if (!$collection)
+        if (! $collection) {
             return null;
+        }
 
-        # Checking if the given collection is one model.
+        // Checking if the given collection is one model.
 
-        if ($collection instanceof Model)
+        if ($collection instanceof Model) {
             return [$collection, 'single'];
+        }
 
-        # Should check that raw has at least one Model in the array to continue.
+        // Should check that raw has at least one Model in the array to continue.
 
-        if ($collection->isNotEmpty())
+        if ($collection->isNotEmpty()) {
             return [$collection->first(), 'multiple'];
+        }
 
         return null;
     }

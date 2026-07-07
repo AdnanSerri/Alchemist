@@ -36,7 +36,7 @@ class AlchemistServiceProvider extends ServiceProvider
     protected function registerFacades(): void
     {
         $this->app->singleton('Alchemist', function ($app) {
-            return new Alchemist();
+            return new Alchemist;
         });
     }
 }
