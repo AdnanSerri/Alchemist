@@ -398,6 +398,9 @@ Results:
 
 The `$formula` argument is optional everywhere: omit it and the model's active formula (or `BlankParchment`) applies.
 
+> **Laravel Octane:** formulas set via `setFormula()` are flushed automatically at every request boundary, so
+> state can never leak between requests in long-lived workers. Per-call formulas never touch shared state at all.
+
 ### Patterns
 
 #### 1. Context-Aware Formulas

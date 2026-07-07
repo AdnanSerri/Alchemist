@@ -8,11 +8,10 @@ use Orchestra\Testbench\TestCase as Orchestra;
 use Serri\Alchemist\Helpers\DecoratorHelper;
 use Serri\Alchemist\Providers\AlchemistServiceProvider;
 use Serri\Alchemist\Support\Druid;
+use Serri\Alchemist\Support\FormulaRegistry;
 use Serri\Alchemist\Tests\Fixtures\Models\Author;
 use Serri\Alchemist\Tests\Fixtures\Models\Comment;
 use Serri\Alchemist\Tests\Fixtures\Models\Post;
-use Serri\Alchemist\Tests\Fixtures\Models\Potion;
-use Serri\Alchemist\Tests\Fixtures\Models\Profile;
 
 abstract class TestCase extends Orchestra
 {
@@ -42,13 +41,11 @@ abstract class TestCase extends Orchestra
 
     /**
      * Formulas live in static state, so anything set in one test would leak
-     * into the next. Clear every fixture model between tests.
+     * into the next.
      */
     protected function resetFormulas(): void
     {
-        foreach ([Author::class, Post::class, Comment::class, Potion::class, Profile::class] as $model) {
-            $model::unsetFormula();
-        }
+        FormulaRegistry::flush();
     }
 
     protected function createSchema(): void

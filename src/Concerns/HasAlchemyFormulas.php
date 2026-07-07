@@ -3,26 +3,20 @@
 namespace Serri\Alchemist\Concerns;
 
 use Serri\Alchemist\Formulas\Formula;
+use Serri\Alchemist\Support\FormulaRegistry;
 
 trait HasAlchemyFormulas
 {
     private const DEFAULT_FORMULA_CONST_NAME = 'BlankParchment';
 
     /**
-     * Active formulas, keyed by model class.
-     *
-     * @var array<class-string, array<int, string>>
-     */
-    protected static array $formulas = [];
-
-    /**
      * Set the model's active formula.
      *
-     * @param  array<int, string>  $formula
+     * @param  array<int|string, mixed>  $formula
      */
     public static function setFormula(array $formula): void
     {
-        static::$formulas[static::class] = $formula;
+        FormulaRegistry::set(static::class, $formula);
     }
 
     /**
@@ -30,18 +24,18 @@ trait HasAlchemyFormulas
      */
     public static function unsetFormula(): void
     {
-        unset(static::$formulas[static::class]);
+        FormulaRegistry::forget(static::class);
     }
 
     /**
      * Get the model's active formula, falling back to the nearest
      * BlankParchment constant.
      *
-     * @return array<int, string>
+     * @return array<int|string, mixed>
      */
     public static function formula(): array
     {
-        return self::$formulas[static::class] ?? (static::getDefaultFormulasClass())::BlankParchment;
+        return FormulaRegistry::get(static::class) ?? (static::getDefaultFormulasClass())::BlankParchment;
     }
 
     private static function getDefaultFormulasClass(): string

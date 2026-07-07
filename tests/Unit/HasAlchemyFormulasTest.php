@@ -5,7 +5,7 @@ namespace Serri\Alchemist\Tests\Unit;
 use App\Formulas\Formula;
 use App\Formulas\PostFormula;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
+use Serri\Alchemist\Support\FormulaRegistry;
 use Serri\Alchemist\Tests\Fixtures\Models\Comment;
 use Serri\Alchemist\Tests\Fixtures\Models\Post;
 use Serri\Alchemist\Tests\Fixtures\Models\Profile;
@@ -14,9 +14,7 @@ class HasAlchemyFormulasTest extends TestCase
 {
     protected function tearDown(): void
     {
-        foreach ([Post::class, Comment::class, Profile::class] as $model) {
-            (new ReflectionProperty($model, 'formulas'))->setValue(null, []);
-        }
+        FormulaRegistry::flush();
 
         parent::tearDown();
     }
