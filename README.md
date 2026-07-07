@@ -508,6 +508,30 @@ return Alchemist::response($post, PostFormula::Detailed, 201, ['X-Custom' => 'he
 
 Paginators keep their pagination envelope (`data`, `total`, `links`, ...); everything else returns the brewed array.
 
+#### 6. Sparse Fieldsets from the Request
+
+Let clients narrow the response — with your formula as the ceiling they can never exceed:
+
+```php
+use Serri\Alchemist\Support\Sieve;
+
+// GET /posts?fields=id,title&include=comments&fields[comments]=body
+public function index(Request $request)
+{
+    return Alchemist::response(
+        Post::with('comments')->paginate(15),
+        Sieve::from($request, PostFormula::Detailed),   // Detailed is the allow-list
+    );
+}
+```
+
+- `fields=id,title` narrows top-level fields (`fields[self]=...` when combined with relation fields).
+- `include=comments,comments.post` chooses which nested-spec relations survive (dot paths for depth).
+- `fields[comments]=body` narrows a relation's nested spec, at any depth (`fields[comments.post]=id`).
+- No parameters → the allow-list verbatim, so it is a drop-in wrapper.
+- Requests outside the allow-list are silently dropped; use `Sieve::strict()` to throw
+  an `InvalidSieveRequestException` instead (map it to a 4xx in your exception handler).
+
 ### Syntax Variations
 
 #### 1. Helper Function (Simplest)

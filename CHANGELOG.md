@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - **`Alchemist::brewMixed($collection, $formulaMap = [])`** — brews heterogeneous collections (feeds, search results, morph queries): each element uses its own class's formula, order preserved; per-class formulas can be pinned via the map.
+- **`Sieve` — request-driven sparse fieldsets**: `Sieve::from($request, $allowList)` builds a formula from `fields` / `include` / `fields[relation]` query parameters, always capped by the allow-list formula (clients narrow, never widen). No parameters returns the allow-list verbatim; `Sieve::strict()` throws `InvalidSieveRequestException` for out-of-bounds requests.
 
 ### Changed
 
