@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **Per-call formulas**: `brew($models, PostFormula::Author)` and `brewBatch($paginator, $formula)` accept the formula directly — no global state involved. A per-call formula wins over `setFormula()` for that call only.
+- **Nested formula specs**: formula arrays may pin a relation's formula inline (`'comments' => CommentFormula::BodyOnly`), recursively. Plain string entries keep resolving through the related model's own formula, so all existing formulas remain valid.
+- `Contracts\AcceptsNestedFormula` — opt-in interface for custom ingredients that can brew a field with a caller-provided nested formula.
+- `Exceptions\InvalidFormulaException` — thrown for malformed formula entries and nested specs on non-relation fields.
+
 ## [1.2.0] - 2026-07-07
 
 ### Performance

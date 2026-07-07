@@ -14,10 +14,10 @@ class SingleBrewingHandler implements BrewingHandlerContract
     {
         $decoction = [];
 
-        foreach ($context->formula() as $element) {
+        foreach ($context->formula() as $element => $nestedFormula) {
             $decoction = array_merge(
                 $decoction,
-                AttributeBrewingHandler::brew($context, $context->raw(), $element)
+                AttributeBrewingHandler::brew($context, $context->raw(), $element, $nestedFormula)
             );
         }
 
