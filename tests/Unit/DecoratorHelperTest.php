@@ -75,4 +75,18 @@ class DecoratorHelperTest extends TestCase
 
         DecoratorHelper::getMethodNameByDecorator(Mutagen::class, new Author, 'secret');
     }
+
+    public function test_lookups_are_stable_across_the_cache_and_flushes(): void
+    {
+        DecoratorHelper::flushCache();
+
+        $first = DecoratorHelper::getMethodsNamesByDecorator(Mutagen::class, new Author);
+        $second = DecoratorHelper::getMethodsNamesByDecorator(Mutagen::class, new Author); // cache hit
+
+        $this->assertSame($first, $second);
+
+        DecoratorHelper::flushCache();
+
+        $this->assertSame($first, DecoratorHelper::getMethodsNamesByDecorator(Mutagen::class, new Author));
+    }
 }

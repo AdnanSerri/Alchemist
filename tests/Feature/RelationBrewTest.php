@@ -89,6 +89,25 @@ class RelationBrewTest extends TestCase
         $this->assertSame([], $brewed['writer']);
     }
 
+    public function test_relation_heavy_collections_brew_correctly(): void
+    {
+        Post::setFormula(PostFormula::WithComments);
+        Comment::setFormula(CommentFormula::BodyOnly);
+
+        foreach (range(1, 30) as $i) {
+            $post = $this->createPost(['title' => "Post $i"]);
+            $this->createComment($post, ['body' => "Comment on $i"]);
+            $this->createComment($post, ['body' => "Second on $i"]);
+        }
+
+        $brewed = alchemist()->brew(Post::with('comments')->orderBy('id')->get());
+
+        $this->assertCount(30, $brewed);
+        $this->assertSame('Post 17', $brewed[16]['title']);
+        $this->assertCount(2, $brewed[16]['comments']);
+        $this->assertSame('Comment on 17', $brewed[16]['comments'][0]['body']);
+    }
+
     public function test_relations_brew_within_collections(): void
     {
         $postA = $this->createPost(['title' => 'A']);

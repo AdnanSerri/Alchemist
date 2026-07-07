@@ -5,7 +5,9 @@ namespace Serri\Alchemist\Tests;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Serri\Alchemist\Helpers\DecoratorHelper;
 use Serri\Alchemist\Providers\AlchemistServiceProvider;
+use Serri\Alchemist\Support\Druid;
 use Serri\Alchemist\Tests\Fixtures\Models\Author;
 use Serri\Alchemist\Tests\Fixtures\Models\Comment;
 use Serri\Alchemist\Tests\Fixtures\Models\Post;
@@ -24,6 +26,11 @@ abstract class TestCase extends Orchestra
     protected function tearDown(): void
     {
         $this->resetFormulas();
+
+        // Reflection caches are class-keyed and normally harmless to share,
+        // but tests that mutate instance-level $fillable must not leak.
+        Druid::flushCache();
+        DecoratorHelper::flushCache();
 
         parent::tearDown();
     }
