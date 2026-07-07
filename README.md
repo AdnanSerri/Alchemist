@@ -392,6 +392,7 @@ Results:
 |------------------|--------------------------------------------------------|----------------------------------------------------|
 | `brew()`         | Transforms a model or collection into an array         | `Alchemist::brew($posts, PostFormula::Author)`     |
 | `brewBatch()`    | Transforms a paginator's items, keeping its metadata   | `Alchemist::brewBatch($paginator, $formula)`       |
+| `response()`     | Brews anything straight into a `JsonResponse`          | `Alchemist::response($paginator, $formula)`        |
 | `setFormula()`   | Assigns the model's active (fallback) formula          | `Post::setFormula(PostFormula::DetailedView)`      |
 | `unsetFormula()` | Clears it, falling back to `BlankParchment`            | `Post::unsetFormula()`                             |
 
@@ -424,6 +425,27 @@ $paginated = Post::paginate(15);
 
 return Alchemist::brewBatch($paginated); // Preserves pagination structure
 ```
+
+`brewBatch()` accepts length-aware, simple (`simplePaginate`), and cursor (`cursorPaginate`) paginators alike.
+
+#### 4. One-Line Controllers
+
+`response()` brews anything — model, collection, or paginator — straight into a `JsonResponse`:
+
+```php
+public function index()
+{
+    return Alchemist::response(
+        Post::with('comments')->paginate(15),
+        PostFormula::WithComments,
+    );
+}
+
+// Optional status and headers:
+return Alchemist::response($post, PostFormula::Detailed, 201, ['X-Custom' => 'header']);
+```
+
+Paginators keep their pagination envelope (`data`, `total`, `links`, ...); everything else returns the brewed array.
 
 ### Syntax Variations
 

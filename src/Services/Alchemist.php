@@ -4,7 +4,9 @@ namespace Serri\Alchemist\Services;
 
 use Illuminate\Database\Eloquent\Collection as ECollection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Pagination\AbstractCursorPaginator;
+use Illuminate\Pagination\AbstractPaginator;
 use Illuminate\Support\Collection as SCollection;
 use Serri\Alchemist\Context\BrewingContext;
 use Serri\Alchemist\Exceptions\UnbrewableInputException;
@@ -51,13 +53,16 @@ class Alchemist
 
     /**
      * The paginator is mutated in place: its models are replaced by their
-     * brewed arrays while the pagination metadata is preserved.
+     * brewed arrays while the pagination metadata is preserved. Accepts
+     * length-aware, simple, and cursor paginators.
      *
-     * @param  LengthAwarePaginator<int|string, mixed>  $paginator
+     * @template TPaginator of AbstractPaginator<int|string, mixed>|AbstractCursorPaginator<int|string, mixed>
+     *
+     * @param  TPaginator  $paginator
      * @param  array<int|string, mixed>|null  $formula
-     * @return LengthAwarePaginator<int|string, mixed>
+     * @return TPaginator
      */
-    public function brewBatch(LengthAwarePaginator $paginator, ?array $formula = null): LengthAwarePaginator
+    public function brewBatch(AbstractPaginator|AbstractCursorPaginator $paginator, ?array $formula = null): AbstractPaginator|AbstractCursorPaginator
     {
         if (empty($paginator->items())) {
             return $paginator;
@@ -68,6 +73,27 @@ class Alchemist
         $paginator->setCollection(collect($brewing));
 
         return $paginator;
+    }
+
+    /**
+     * Brew straight into a JsonResponse. Paginators keep their pagination
+     * envelope; models and collections return the brewed array.
+     *
+     * @param  ECollection<int, Model>|SCollection<int|string, mixed>|Model|AbstractPaginator<int|string, mixed>|AbstractCursorPaginator<int|string, mixed>|null  $input
+     * @param  array<int|string, mixed>|null  $formula
+     * @param  array<string, string>  $headers
+     */
+    public function response(
+        ECollection|SCollection|Model|AbstractPaginator|AbstractCursorPaginator|null $input,
+        ?array $formula = null,
+        int $status = 200,
+        array $headers = [],
+    ): JsonResponse {
+        $payload = $input instanceof AbstractPaginator || $input instanceof AbstractCursorPaginator
+            ? $this->brewBatch($input, $formula)
+            : $this->brew($input, $formula);
+
+        return new JsonResponse($payload, $status, $headers);
     }
 
     /**
