@@ -16,7 +16,7 @@ class BrewingContext
      * @param  ECollection<int, Model>|SCollection<int|string, mixed>|Model  $raw
      * @param  array<int, class-string<IngredientContract>>  $ingredients
      * @param  array<string, class-string<IngredientContract>>  $attributes
-     * @param  array<int, string>  $formula
+     * @param  array<string, array<int|string, mixed>|null>  $formula  normalised: field => nested formula|null
      * @param  array<int|string, mixed>  $decoction
      */
     public function __construct(
@@ -78,7 +78,7 @@ class BrewingContext
     }
 
     /**
-     * @param  array<int, string>  $formula
+     * @param  array<string, array<int|string, mixed>|null>  $formula  normalised: field => nested formula|null
      */
     public function setFormula(array $formula): void
     {
@@ -86,7 +86,7 @@ class BrewingContext
     }
 
     /**
-     * @return array<int, string>
+     * @return array<string, array<int|string, mixed>|null>
      */
     public function formula(): array
     {

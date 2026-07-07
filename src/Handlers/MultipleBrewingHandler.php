@@ -17,10 +17,10 @@ class MultipleBrewingHandler implements BrewingHandlerContract
         foreach ($context->raw() as $rawElement) {
             $brewing = [];
 
-            foreach ($context->formula() as $element) {
+            foreach ($context->formula() as $element => $nestedFormula) {
                 $brewing = array_merge(
                     $brewing,
-                    AttributeBrewingHandler::brew($context, $rawElement, $element)
+                    AttributeBrewingHandler::brew($context, $rawElement, $element, $nestedFormula)
                 );
             }
 

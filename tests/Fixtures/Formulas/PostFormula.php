@@ -17,4 +17,7 @@ class PostFormula extends Formula
     const WithComments = ['id', 'title', 'comments'];
 
     const WithWriter = ['id', 'title', 'writer'];
+
+    /** Nested spec: pins the comments' formula from the parent. */
+    const WithCommentBodies = ['id', 'title', 'comments' => CommentFormula::BodyOnly];
 }

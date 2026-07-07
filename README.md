@@ -302,24 +302,45 @@ class ProfileFormula extends Formula
 
 ### Basic Data Transformation
 
-To transform model data using your formulas:
+Pass a formula straight into the brew — no global state, no sequencing:
 
 ```php
 use App\Models\Post;
 use App\Formulas\PostFormula;
-use App\Formulas\ProfileFormula;
 use Serri\Alchemist\Facades\Alchemist;
 
-// 1. Fetch your models (eager-load the relations your formula uses!)
+// Eager-load the relations your formula uses!
 $posts = Post::with('author.profile')->get();
 
-// 2. Specify which formulas to use
+$transformedData = Alchemist::brew($posts, PostFormula::Author);
+```
+
+...where the formula pins the whole response shape, nested relations included:
+
+```php
+class PostFormula extends Formula
+{
+    const Author = [
+        'id',
+        'title',
+        'author_profile' => ProfileFormula::OnlyName, # Nested spec: shapes the relation inline.
+    ];
+}
+```
+
+Nested specs recurse to any depth, and any relation listed as a plain string keeps resolving through the
+related model's own formula.
+
+The classic stateful style remains fully supported — set formulas up front, brew later:
+
+```php
 Post::setFormula(PostFormula::Author);
 Profile::setFormula(ProfileFormula::OnlyName);
 
-// 3. Process through Alchemist
 $transformedData = Alchemist::brew($posts);
 ```
+
+A per-call formula always wins over `setFormula()` for that call, so the two styles mix safely.
 
 Results:
 
@@ -354,12 +375,14 @@ Results:
 
 ### Key Methods
 
-| Method           | Purpose                                                | Example                                       |
-|------------------|--------------------------------------------------------|-----------------------------------------------|
-| `setFormula()`   | Assigns the model's active formula                     | `Post::setFormula(PostFormula::DetailedView)` |
-| `unsetFormula()` | Clears it, falling back to `BlankParchment`            | `Post::unsetFormula()`                        |
-| `brew()`         | Transforms a model or collection into an array         | `Alchemist::brew($collection\|$model)`        |
-| `brewBatch()`    | Transforms a paginator's items, keeping its metadata   | `Alchemist::brewBatch($paginator)`            |
+| Method           | Purpose                                                | Example                                            |
+|------------------|--------------------------------------------------------|----------------------------------------------------|
+| `brew()`         | Transforms a model or collection into an array         | `Alchemist::brew($posts, PostFormula::Author)`     |
+| `brewBatch()`    | Transforms a paginator's items, keeping its metadata   | `Alchemist::brewBatch($paginator, $formula)`       |
+| `setFormula()`   | Assigns the model's active (fallback) formula          | `Post::setFormula(PostFormula::DetailedView)`      |
+| `unsetFormula()` | Clears it, falling back to `BlankParchment`            | `Post::unsetFormula()`                             |
+
+The `$formula` argument is optional everywhere: omit it and the model's active formula (or `BlankParchment`) applies.
 
 ### Patterns
 
