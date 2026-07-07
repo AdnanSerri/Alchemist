@@ -4,6 +4,7 @@ namespace Serri\Alchemist\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Laravel\Octane\Events\RequestReceived;
+use Serri\Alchemist\Console\FormulaLintCommand;
 use Serri\Alchemist\Console\MakeFormulaCommand;
 use Serri\Alchemist\Services\Alchemist;
 use Serri\Alchemist\Support\FormulaRegistry;
@@ -17,7 +18,10 @@ class AlchemistServiceProvider extends ServiceProvider
         $this->registerOctaneFlush();
 
         if ($this->app->runningInConsole()) {
-            $this->commands([MakeFormulaCommand::class]);
+            $this->commands([
+                FormulaLintCommand::class,
+                MakeFormulaCommand::class,
+            ]);
         }
     }
 
