@@ -116,18 +116,37 @@ class MakeFormulaCommand extends Command
     }
 
     /**
-     * The generated class extends App\Formulas\Formula; make sure that base
-     * exists, publishing the default stub when it does not.
+     * The namespace formulas are generated into: the first configured entry.
+     */
+    protected function formulaNamespace(): string
+    {
+        return config('alchemist.formula_namespaces', ['App\\Formulas'])[0] ?? 'App\\Formulas';
+    }
+
+    /**
+     * The generated class extends {namespace}\Formula; make sure that base
+     * exists, generating it when it does not.
      */
     protected function ensureBaseFormulaExists(string $folder): void
     {
+        $namespace = $this->formulaNamespace();
         $basePath = rtrim($folder, '/\\').DIRECTORY_SEPARATOR.'Formula.php';
 
-        if (File::exists($basePath) || class_exists('App\\Formulas\\Formula')) {
+        if (File::exists($basePath) || class_exists($namespace.'\\Formula')) {
             return;
         }
 
-        File::copy(__DIR__.'/../../stubs/formula.stub', $basePath);
+        File::put($basePath, <<<PHP
+        <?php
+
+        namespace $namespace;
+
+        class Formula
+        {
+            const BlankParchment = ['id']; # Default formula.
+        }
+
+        PHP);
 
         $this->components->info("Base formula [$basePath] created.");
     }
@@ -154,8 +173,8 @@ class MakeFormulaCommand extends Command
         }
 
         return str_replace(
-            ['{{ class }}', '{{ fields }}', "{{ hints }}\n"],
-            [$class, $fieldLines, $hintLines],
+            ['{{ namespace }}', '{{ class }}', '{{ fields }}', "{{ hints }}\n"],
+            [$this->formulaNamespace(), $class, $fieldLines, $hintLines],
             File::get(__DIR__.'/../../stubs/formula-class.stub')
         );
     }

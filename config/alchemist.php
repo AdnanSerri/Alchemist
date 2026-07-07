@@ -20,6 +20,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Formula Namespaces
+    |--------------------------------------------------------------------------
+    |
+    | The namespaces searched (in order) when resolving a model's fallback
+    | formula class ({Model}Formula, then the generic Formula). Add your
+    | module namespaces here for modular / DDD codebases. The first entry
+    | is also where make:formula generates classes, so keep it paired with
+    | the formulas_folder_path above.
+    |
+    */
+
+    'formula_namespaces' => [
+        'App\\Formulas',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Ingredients
     |--------------------------------------------------------------------------
     |

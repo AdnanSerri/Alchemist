@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 ### Added
 
 - **`php artisan formula:lint`** — validates every formula constant against its model (including nested specs, resolved through the relation's related model) using the same discovery the brew pipeline uses. Unknown fields fail with a "did you mean" suggestion and a non-zero exit code for CI; `--json` for tooling; models matched by convention or via `protected static string $model`.
+- **Configurable formula namespaces** (`formula_namespaces` config): fallback resolution searches the configured namespaces in order instead of hardcoding `App\Formulas`, unblocking modular / DDD codebases. `make:formula` generates into the first configured namespace (base `Formula` included).
 
 ### Changed
 

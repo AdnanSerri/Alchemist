@@ -18,6 +18,15 @@ final class FormulaRegistry
     private static array $formulas = [];
 
     /**
+     * Namespaces searched (in order) for {Model}Formula / Formula fallbacks.
+     * Fed from config('alchemist.formula_namespaces') by the service
+     * provider; the default keeps the trait usable without a container.
+     *
+     * @var array<int, string>
+     */
+    private static array $namespaces = ['App\\Formulas'];
+
+    /**
      * @param  array<int|string, mixed>  $formula
      */
     public static function set(string $model, array $formula): void
@@ -41,5 +50,21 @@ final class FormulaRegistry
     public static function flush(): void
     {
         self::$formulas = [];
+    }
+
+    /**
+     * @param  array<int, string>  $namespaces
+     */
+    public static function setNamespaces(array $namespaces): void
+    {
+        self::$namespaces = $namespaces === [] ? ['App\\Formulas'] : $namespaces;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function namespaces(): array
+    {
+        return self::$namespaces;
     }
 }
