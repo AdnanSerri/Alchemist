@@ -11,8 +11,10 @@ use Serri\Alchemist\Ingredients\GuardedIngredient;
 use Serri\Alchemist\Ingredients\MutagenIngredient;
 use Serri\Alchemist\Ingredients\RelationIngredient;
 use Serri\Alchemist\Support\Druid;
+use Serri\Alchemist\Tests\Fixtures\Ingredients\UppercaseIngredient;
 use Serri\Alchemist\Tests\Fixtures\Models\Author;
 use Serri\Alchemist\Tests\Fixtures\Models\Post;
+use Serri\Alchemist\Tests\Fixtures\Models\Potion;
 
 class DruidTest extends TestCase
 {
@@ -57,6 +59,12 @@ class DruidTest extends TestCase
         $this->assertNull(Druid::examine(new SCollection));
     }
 
+    public function test_examine_returns_null_for_a_collection_of_non_models(): void
+    {
+        $this->assertNull(Druid::examine(new SCollection([['id' => 1], ['id' => 2]])));
+        $this->assertNull(Druid::examine(new SCollection(['just', 'strings'])));
+    }
+
     public function test_extract_maps_each_exposed_field_to_its_ingredient(): void
     {
         [$attributes, $formula] = Druid::extract(new Author, self::INGREDIENTS);
@@ -89,5 +97,24 @@ class DruidTest extends TestCase
         [, $formula] = Druid::extract(new Post, self::INGREDIENTS);
 
         $this->assertSame(PostFormula::BlankParchment, $formula);
+    }
+
+    public function test_extract_never_exposes_the_default_guarded_wildcard(): void
+    {
+        // Potion relies on Eloquent's default $guarded = ['*'].
+        [$attributes] = Druid::extract(new Potion, self::INGREDIENTS);
+
+        $this->assertArrayNotHasKey('*', $attributes);
+        $this->assertSame(FillableIngredient::class, $attributes['name']);
+    }
+
+    public function test_extract_skips_ingredients_whose_property_the_model_lacks(): void
+    {
+        // UppercaseIngredient reads $shoutable, which only Post defines.
+        $ingredients = array_merge(self::INGREDIENTS, [UppercaseIngredient::class]);
+
+        [$attributes] = Druid::extract(new Author, $ingredients);
+
+        $this->assertNotContains(UppercaseIngredient::class, $attributes);
     }
 }

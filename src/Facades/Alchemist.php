@@ -7,8 +7,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static array brew(\Illuminate\Support\Collection|\Illuminate\Database\Eloquent\Collection|Model|null $collection)
- * @method static LengthAwarePaginator brewBatch(LengthAwarePaginator $paginator)
+ * @method static array<int|string, mixed> brew(\Illuminate\Support\Collection<int|string, mixed>|\Illuminate\Database\Eloquent\Collection<int, Model>|Model|null $collection)
+ * @method static LengthAwarePaginator<int|string, mixed> brewBatch(LengthAwarePaginator<int, Model> $paginator)
  */
 class Alchemist extends Facade
 {

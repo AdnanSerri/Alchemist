@@ -4,6 +4,7 @@ namespace Serri\Alchemist\Tests\Feature;
 
 use App\Formulas\PostFormula;
 use Serri\Alchemist\Tests\Fixtures\Ingredients\UppercaseIngredient;
+use Serri\Alchemist\Tests\Fixtures\Models\Author;
 use Serri\Alchemist\Tests\Fixtures\Models\Post;
 use Serri\Alchemist\Tests\TestCase;
 
@@ -37,5 +38,22 @@ class CustomIngredientTest extends TestCase
         Post::setFormula(PostFormula::Summary);
 
         $this->assertSame('whisper', alchemist()->brew($post)['title']);
+    }
+
+    public function test_models_without_the_ingredients_property_still_brew(): void
+    {
+        // UppercaseIngredient reads $shoutable, which Author does not define.
+        config([
+            'alchemist.ingredients' => array_merge(
+                config('alchemist.ingredients'),
+                [UppercaseIngredient::class]
+            ),
+        ]);
+
+        $author = $this->createAuthor(['first_name' => 'Nicolas']);
+
+        Author::setFormula(['first_name']);
+
+        $this->assertSame(['first_name' => 'Nicolas'], alchemist()->brew($author));
     }
 }

@@ -33,6 +33,12 @@ class Author extends Model
         return $this->email_verified_at !== null;
     }
 
+    #[Mutagen('initials')] // positional argument on purpose
+    public function makeInitials(): string
+    {
+        return mb_substr($this->first_name, 0, 1).mb_substr($this->last_name, 0, 1);
+    }
+
     #[Relation]
     public function posts(): HasMany
     {

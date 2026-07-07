@@ -28,6 +28,14 @@ class HasAlchemyFormulasTest extends TestCase
         $this->assertSame(PostFormula::Summary, Post::formula());
     }
 
+    public function test_unset_formula_restores_the_fallback(): void
+    {
+        Post::setFormula(PostFormula::Detailed);
+        Post::unsetFormula();
+
+        $this->assertSame(PostFormula::BlankParchment, Post::formula());
+    }
+
     public function test_formulas_are_scoped_per_model_class(): void
     {
         Post::setFormula(PostFormula::Detailed);

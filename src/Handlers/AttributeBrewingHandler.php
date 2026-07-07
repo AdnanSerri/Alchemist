@@ -2,8 +2,9 @@
 
 namespace Serri\Alchemist\Handlers;
 
-use Exception;
 use Serri\Alchemist\Context\BrewingContext;
+use Serri\Alchemist\Exceptions\InvalidIngredientException;
+use Serri\Alchemist\Exceptions\UnknownFormulaFieldException;
 
 /**
  * @internal
@@ -11,14 +12,18 @@ use Serri\Alchemist\Context\BrewingContext;
 class AttributeBrewingHandler
 {
     /**
-     * @throws Exception
+     * @return array<string, mixed>
+     *
+     * @throws UnknownFormulaFieldException
+     * @throws InvalidIngredientException
      */
     public static function brew(BrewingContext $context, mixed $brewing, string $element): array
     {
-        $ingredientClass = $context->attributes()[$element];
+        $ingredientClass = $context->attributes()[$element]
+            ?? throw UnknownFormulaFieldException::forField($element, get_class($context->sample()));
 
-        if (! class_exists($ingredientClass) or ! method_exists($ingredientClass, 'infuse')) {
-            throw new Exception("Ingredient called '$ingredientClass' is not existed, or $ingredientClass::infuse is not existed");
+        if (! class_exists($ingredientClass) || ! method_exists($ingredientClass, 'infuse')) {
+            throw InvalidIngredientException::forClass($ingredientClass);
         }
 
         return $ingredientClass::infuse($element, $brewing);

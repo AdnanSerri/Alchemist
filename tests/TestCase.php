@@ -5,11 +5,11 @@ namespace Serri\Alchemist\Tests;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase as Orchestra;
-use ReflectionProperty;
 use Serri\Alchemist\Providers\AlchemistServiceProvider;
 use Serri\Alchemist\Tests\Fixtures\Models\Author;
 use Serri\Alchemist\Tests\Fixtures\Models\Comment;
 use Serri\Alchemist\Tests\Fixtures\Models\Post;
+use Serri\Alchemist\Tests\Fixtures\Models\Potion;
 use Serri\Alchemist\Tests\Fixtures\Models\Profile;
 
 abstract class TestCase extends Orchestra
@@ -34,15 +34,13 @@ abstract class TestCase extends Orchestra
     }
 
     /**
-     * HasAlchemyFormulas keeps formulas in a static property with no reset API,
-     * so state set in one test would leak into the next. Reset it by reflection
-     * on every model that uses the trait.
+     * Formulas live in static state, so anything set in one test would leak
+     * into the next. Clear every fixture model between tests.
      */
     protected function resetFormulas(): void
     {
-        foreach ([Author::class, Post::class, Comment::class, Profile::class] as $model) {
-            $property = new ReflectionProperty($model, 'formulas');
-            $property->setValue(null, []);
+        foreach ([Author::class, Post::class, Comment::class, Potion::class, Profile::class] as $model) {
+            $model::unsetFormula();
         }
     }
 

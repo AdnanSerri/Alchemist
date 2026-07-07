@@ -10,8 +10,6 @@ class AlchemistServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPublishing();
-
-        $this->registerFacades();
     }
 
     public function register(): void
@@ -20,6 +18,11 @@ class AlchemistServiceProvider extends ServiceProvider
             __DIR__.'/../../config/alchemist.php',
             'alchemist'
         );
+
+        $this->app->singleton(Alchemist::class);
+
+        // Backwards-compatible accessor for the facade and app('Alchemist').
+        $this->app->alias(Alchemist::class, 'Alchemist');
     }
 
     protected function registerPublishing(): void
@@ -31,12 +34,5 @@ class AlchemistServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../../stubs/formula.stub' => app_path('Formulas/Formula.php'),
         ], 'alchemist-formula');
-    }
-
-    protected function registerFacades(): void
-    {
-        $this->app->singleton('Alchemist', function ($app) {
-            return new Alchemist;
-        });
     }
 }

@@ -2,8 +2,7 @@
 
 namespace Serri\Alchemist\Support;
 
-use Exception;
-use Illuminate\Support\Facades\File;
+use Serri\Alchemist\Exceptions\InvalidConfigurationException;
 
 /**
  * @internal
@@ -11,22 +10,30 @@ use Illuminate\Support\Facades\File;
 final class BrewingConfigLoader
 {
     /**
-     * @throws Exception
+     * @return array{formulas_folder_path: string, ingredients: array<int, class-string>}
+     *
+     * @throws InvalidConfigurationException
      */
     public static function load(): array
     {
         $config = config('alchemist');
 
-        if (! array_key_exists('formulas_folder_path', $config) or $config['formulas_folder_path'] == '' or is_null($config['formulas_folder_path'])) {
-            throw new Exception('formulas_folder_path key should exist with a value of the Formulas folder path.');
+        if (! is_array($config)) {
+            throw new InvalidConfigurationException(
+                "The 'alchemist' configuration is missing. Publish it with: php artisan vendor:publish --tag=alchemist-config"
+            );
         }
 
-        if (! File::exists($config['formulas_folder_path']) and File::isDirectory($config['formulas_folder_path'])) {
-            throw new Exception("Formula folder is not found at '{$config['formulas_folder_path']}'.");
+        if (empty($config['formulas_folder_path']) || ! is_string($config['formulas_folder_path'])) {
+            throw new InvalidConfigurationException(
+                "The 'alchemist.formulas_folder_path' configuration key must be set to the Formulas folder path."
+            );
         }
 
-        if (! array_key_exists('ingredients', $config) or $config['ingredients'] == '' or is_null($config['ingredients']) or ! is_array($config['ingredients'])) {
-            throw new Exception('ingredients key should exist with a value of the ingredients array.');
+        if (empty($config['ingredients']) || ! is_array($config['ingredients'])) {
+            throw new InvalidConfigurationException(
+                "The 'alchemist.ingredients' configuration key must be a non-empty array of ingredient classes."
+            );
         }
 
         return $config;
