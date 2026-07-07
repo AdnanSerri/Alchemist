@@ -16,16 +16,14 @@ composer test                               # phpunit (suites: Unit, Feature)
 vendor/bin/phpunit --filter SomeTestName    # run a single test
 composer lint                               # pint --test (check code style)
 composer fix                                # pint (apply code style)
-composer analyse                            # phpstan level 6 (52 pre-existing errors are baselined in phpstan-baseline.neon)
+composer analyse                            # phpstan level 6 (clean, no baseline — keep it that way)
 ```
 
 CI (`.github/workflows/tests.yml`) runs lint, PHPStan, and the test matrix (PHP 8.2–8.4 × Laravel 12/13; Laravel 13 needs PHP ≥ 8.3).
 
 ## Tests
 
-`tests/TestCase.php` creates the SQLite schema and — critically — resets the trait's static `$formulas` on every fixture model in `tearDown()` via reflection, because the package has no reset API and formulas leak between tests otherwise. Fixture models live in `tests/Fixtures/Models/`; fixture formula classes live in `tests/Fixtures/Formulas/` but are in the **`App\Formulas` namespace** (classmap-autoloaded) because `HasAlchemyFormulas` hardcodes that namespace for fallback resolution. `Profile` deliberately has no formula class to exercise the generic fallback tier.
-
-Known bugs (positional decorator arguments, the `'*'` default-guarded pollution, the dead folder-existence check in `BrewingConfigLoader`) are deliberately **not** covered by tests — do not add tests that lock them in; fix them and then test the fixed behaviour.
+`tests/TestCase.php` creates the SQLite schema and — critically — calls `unsetFormula()` on every fixture model in `tearDown()`, because formulas live in static state and leak between tests otherwise. Fixture models live in `tests/Fixtures/Models/`; fixture formula classes live in `tests/Fixtures/Formulas/` but are in the **`App\Formulas` namespace** (classmap-autoloaded) because `HasAlchemyFormulas` hardcodes that namespace for fallback resolution. Several fixtures exist to pin specific behaviours: `Profile` has no formula class (generic fallback tier), `Potion` keeps Eloquent's default `$guarded = ['*']` (wildcard must never become a field), `Cauldron` lacks the trait entirely (must throw `UnbrewableInputException`).
 
 ## Architecture
 
@@ -49,7 +47,7 @@ Ingredients implement `Contracts\IngredientContract` (`ingredientName()` + `infu
 
 - `FillableIngredient` / `GuardedIngredient` — expose model attributes listed in `$fillable` / `$guarded` (read via reflection on the protected property).
 - `MutagenIngredient` — invokes model methods marked `#[Mutagen]` (optionally renamed via `#[Mutagen(name: '...')]`).
-- `RelationIngredient` — for methods marked `#[Relation]`, recursively brews the related model/collection with a **new** `Alchemist` instance, using the related model's own active formula.
+- `RelationIngredient` — for methods marked `#[Relation]`, recursively brews the related model/collection via the shared `Alchemist` singleton, using the related model's own active formula.
 
 Ingredients that opt into attribute-scanning declare `usesDecorator(): bool` returning true (checked with `method_exists`, not part of the contract).
 
@@ -59,7 +57,11 @@ Models opt in with the `Concerns\HasAlchemyFormulas` trait. `Model::setFormula(P
 
 ### Registration
 
-`Providers\AlchemistServiceProvider` merges config, registers the `'Alchemist'` container singleton (backing the `Facades\Alchemist` facade), and publishes two tags: `alchemist-config` (config file) and `alchemist-formula` (`stubs/formula.stub` → `app/Formulas/Formula.php`). A global `alchemist()` helper in `src/Helpers/functions.php` is autoloaded via composer `files`.
+`Providers\AlchemistServiceProvider` merges config, registers a singleton for `Services\Alchemist::class` with `'Alchemist'` as an alias (backing the `Facades\Alchemist` facade), and publishes two tags: `alchemist-config` (config file) and `alchemist-formula` (`stubs/formula.stub` → `app/Formulas/Formula.php`). A global `alchemist()` helper in `src/Helpers/functions.php` (autoloaded via composer `files`) resolves that singleton, as does `RelationIngredient` for nested brews — `brew()` keeps all state local to the call, so re-entering the singleton is safe.
+
+### Errors
+
+All failures throw subclasses of `Exceptions\AlchemistException`: `InvalidConfigurationException` (bad `alchemist` config), `UnknownFormulaFieldException` (formula references an unexposed field), `UnbrewableInputException` (non-model collection items, or model without the trait), `InvalidIngredientException` (ingredient class without `infuse()`). Keep new failure paths inside this hierarchy.
 
 ## Gotchas
 

@@ -1,0 +1,35 @@
+# Changelog
+
+All notable changes to `serri/alchemist` are documented here.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- Test suite (PHPUnit + Orchestra Testbench), PHPStan (level 6, clean), Pint, and a GitHub Actions CI matrix.
+- Laravel 13 support.
+- `Model::unsetFormula()` to clear a model's active formula and fall back to `BlankParchment`.
+- Dedicated exceptions under `Serri\Alchemist\Exceptions`: `AlchemistException` (base), `InvalidConfigurationException`, `UnknownFormulaFieldException`, `UnbrewableInputException`, `InvalidIngredientException`.
+- The `Alchemist` service is now bound in the container by class (`Serri\Alchemist\Services\Alchemist`), with `'Alchemist'` kept as an alias; the `alchemist()` helper and relation brewing now resolve the shared singleton.
+
+### Fixed
+
+- `composer.json` did not declare any `illuminate/*` dependencies.
+- Decorator arguments passed positionally (`#[Mutagen('name')]`) crashed; both positional and named arguments now work.
+- A method *without* a decorator could be matched by its bare name when resolving decorated methods.
+- Referencing an unknown field in a formula produced a raw "Undefined array key" error; it now throws `UnknownFormulaFieldException` naming the field and model.
+- Brewing a collection of non-models or a model without the `HasAlchemyFormulas` trait produced fatal errors; both now throw `UnbrewableInputException` with clear messages.
+- Eloquent's default `$guarded = ['*']` leaked a literal `'*'` field into the exposed-attribute map.
+- Custom ingredients whose backing property is absent on a model crashed the brew; such models now simply contribute no fields for that ingredient.
+- The formulas-folder existence check in the config loader could never trigger (inverted logic) and validated a path that is never read at runtime; the check was removed, the key remains reserved for the upcoming formula generator.
+- `#[Mutagen]` / `#[Relation]` declared their attribute target flag twice.
+- `Alchemist::brew()` kept brewing state on the instance; state is now local to each call, making nested/re-entrant brews on the shared singleton safe.
+
+### Changed
+
+- **Dropped Laravel 11 support.** Laravel 11 reached end of security support in March 2026 and carries unpatched security advisories that Composer refuses to install by default. Requires Laravel 12 or 13 (PHP ≥ 8.2; Laravel 13 requires PHP ≥ 8.3).
+
+## [1.0.3] - 2025
+
+Last release before the changelog was introduced. See the git history for details.
