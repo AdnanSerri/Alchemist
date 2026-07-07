@@ -148,6 +148,28 @@ php artisan make:formula PostFormula --model=Post
 The generator writes to your configured `formulas_folder_path` (default `app/Formulas/`), creates the base
 `Formula` class if it is missing, and refuses to overwrite an existing formula unless you pass `--force`.
 
+### Linting Your Formulas
+
+Formulas are strings resolved at runtime — so let CI catch the typos before production does:
+
+```shell
+php artisan formula:lint
+```
+
+Every constant of every formula class is validated against its model using the exact same discovery the brew
+pipeline uses, **including nested specs** (validated against the related model, no database needed). Unknown
+fields fail with a "did you mean" suggestion; the command exits non-zero, so add it next to your test step in CI.
+Models are matched by convention (`PostFormula` → `App\Models\Post`) or explicitly:
+
+```php
+class WeirdlyNamedFormula extends Formula
+{
+    protected static string $model = \App\Models\Post::class;
+}
+```
+
+Use `--json` for machine-readable output.
+
 Or craft one by hand in `app/Formulas/` like so:
 
 ```php
