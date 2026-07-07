@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-07
+
 ### Performance
 
 - Decorator scans (`#[Mutagen]` / `#[Relation]` method maps) are now computed once per model class instead of once per field per row.
