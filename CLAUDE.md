@@ -31,15 +31,15 @@ The package uses alchemy-themed naming throughout. Translation key: **brew** = t
 
 ### Transformation pipeline (`brew()`)
 
-`Serri\Alchemist\Services\Alchemist::brew($modelOrCollection)` is the entry point:
+`Serri\Alchemist\Services\Alchemist::brew($modelOrCollection, ?array $formula = null)` is the entry point. A per-call `$formula` wins over the model's active formula for that call only.
 
 1. `Support\BrewingConfigLoader` loads and validates the `alchemist` config on every call.
 2. `Support\Druid::examine()` inspects the input — returns a sample model (the collection's first item, or the model itself) plus a handler key (`'single'` or `'multiple'`).
 3. `Support\Druid::extract()` reflects over the **sample model** to build an attribute map: field name → Ingredient class. Non-decorator ingredients (fillable/guarded) read the model's protected property by the name from `ingredientName()`; decorator ingredients scan methods carrying the PHP attribute (`#[Relation]`, `#[Mutagen]`) via `Helpers\DecoratorHelper`. Both the attribute map (per class + ingredient list) and the decorator scans (per class + decorator) are **cached in static properties** — class structure is immutable at runtime, so the caches survive across brews and Octane requests. The active formula is never cached. `flushCache()` exists on both; the test `TestCase` flushes them in `tearDown()`.
-4. Everything is packed into a `Context\BrewingContext` (mutable DTO carried through the pipeline).
-5. `Resolvers\BrewingHandlerResolver` maps the handler key to `Handlers\SingleBrewingHandler` or `Handlers\MultipleBrewingHandler`. Both loop over the formula's field names and delegate each field to `Handlers\AttributeBrewingHandler::brew()`, which looks up the field's Ingredient class in the attribute map and calls its static `infuse()`.
+4. `Support\FormulaParser::normalise()` converts the formula into a uniform `field => nested-formula|null` map. Entries are either plain field names (`'title'`) or **nested specs** (`'comments' => CommentFormula::BodyOnly`); anything else throws `InvalidFormulaException`. Everything is packed into a `Context\BrewingContext` (mutable DTO carried through the pipeline; `formula()` returns the *normalised* map).
+5. `Resolvers\BrewingHandlerResolver` maps the handler key to `Handlers\SingleBrewingHandler` or `Handlers\MultipleBrewingHandler`. Both loop over the normalised formula and delegate each field (plus its nested spec, if any) to `Handlers\AttributeBrewingHandler::brew()`, which looks up the field's Ingredient class in the attribute map and calls its static `infuse()` — or, when a nested spec is present, `infuseWithFormula()` via the opt-in `Contracts\AcceptsNestedFormula` interface (only `RelationIngredient` implements it; a nested spec on any other ingredient throws).
 
-`brewBatch(LengthAwarePaginator)` wraps `brew()` on the paginator's items and swaps the collection back in, preserving pagination metadata.
+`brewBatch($paginator, ?array $formula = null)` wraps `brew()` on the paginator's items and swaps the collection back in, preserving pagination metadata — accepts length-aware, simple, and cursor paginators. `response($input, $formula, $status, $headers)` brews anything (model / collection / paginator / null) into a `JsonResponse`.
 
 ### Ingredients (extensibility point)
 
@@ -51,9 +51,13 @@ Ingredients implement `Contracts\IngredientContract` (`ingredientName()` + `infu
 
 Ingredients that opt into attribute-scanning declare `usesDecorator(): bool` returning true (checked with `method_exists`, not part of the contract).
 
-### Formula selection (global static state)
+### Formula selection
 
-Models opt in with the `Concerns\HasAlchemyFormulas` trait. `Model::setFormula(PostFormula::SomeConst)` stores the formula in a **static array keyed by model class** — this is global mutable state for the request. `formula()` falls back to a `BlankParchment` constant, resolved in order: `App\Formulas\{Model}Formula` → `App\Formulas\Formula` → the package's `Formulas\Formula` (`['id']`). Nested relations therefore pick up whatever formula was set on the related model class before `brew()` was called.
+Precedence per brew: **per-call formula argument** → nested spec from the parent formula (for relations) → the model's active formula (`setFormula()`) → `BlankParchment` fallback, resolved in order: `App\Formulas\{Model}Formula` → `App\Formulas\Formula` → the package's `Formulas\Formula` (`['id']`).
+
+Models opt in with the `Concerns\HasAlchemyFormulas` trait. `Model::setFormula()` stores state in the central `Support\FormulaRegistry` (static, keyed by model class). When Laravel Octane is present, the service provider flushes the registry on Octane's `RequestReceived` event, so formulas cannot leak between requests on long-lived workers (tested via a classmap fixture stand-in for the Octane event class in `tests/Fixtures/Octane/`).
+
+`php artisan make:formula {name} {--model=} {--force}` (`Console\MakeFormulaCommand`) scaffolds formula classes into `formulas_folder_path`, scanning the model through the same `Druid` discovery when `--model` is given.
 
 ### Registration
 
@@ -61,7 +65,7 @@ Models opt in with the `Concerns\HasAlchemyFormulas` trait. `Model::setFormula(P
 
 ### Errors
 
-All failures throw subclasses of `Exceptions\AlchemistException`: `InvalidConfigurationException` (bad `alchemist` config), `UnknownFormulaFieldException` (formula references an unexposed field), `UnbrewableInputException` (non-model collection items, or model without the trait), `InvalidIngredientException` (ingredient class without `infuse()`). Keep new failure paths inside this hierarchy.
+All failures throw subclasses of `Exceptions\AlchemistException`: `InvalidConfigurationException` (bad `alchemist` config), `UnknownFormulaFieldException` (formula references an unexposed field), `UnbrewableInputException` (non-model collection items, or model without the trait), `InvalidIngredientException` (ingredient class without `infuse()`), `InvalidFormulaException` (malformed formula entry, or nested spec on a non-relation field). Keep new failure paths inside this hierarchy.
 
 ## Gotchas
 
