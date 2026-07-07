@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- **`Alchemist::brewMixed($collection, $formulaMap = [])`** — brews heterogeneous collections (feeds, search results, morph queries): each element uses its own class's formula, order preserved; per-class formulas can be pinned via the map.
+
+### Changed
+
+- `brew()` now fails fast with a clear message (pointing at `brewMixed()`) when given a mixed-class collection or a collection with non-model items beyond the first; previously it silently derived everything from the first model.
+
 ## [1.4.0] - 2026-07-07
 
 ### Added

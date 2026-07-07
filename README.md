@@ -431,6 +431,7 @@ Results:
 |------------------|--------------------------------------------------------|----------------------------------------------------|
 | `brew()`         | Transforms a model or collection into an array         | `Alchemist::brew($posts, PostFormula::Author)`     |
 | `brewBatch()`    | Transforms a paginator's items, keeping its metadata   | `Alchemist::brewBatch($paginator, $formula)`       |
+| `brewMixed()`    | Brews a mixed-class collection, per-class formulas     | `Alchemist::brewMixed($feed, $formulaMap)`         |
 | `response()`     | Brews anything straight into a `JsonResponse`          | `Alchemist::response($paginator, $formula)`        |
 | `setFormula()`   | Assigns the model's active (fallback) formula          | `Post::setFormula(PostFormula::DetailedView)`      |
 | `unsetFormula()` | Clears it, falling back to `BlankParchment`            | `Post::unsetFormula()`                             |
@@ -470,7 +471,25 @@ return Alchemist::brewBatch($paginated); // Preserves pagination structure
 
 `brewBatch()` accepts length-aware, simple (`simplePaginate`), and cursor (`cursorPaginate`) paginators alike.
 
-#### 4. One-Line Controllers
+#### 4. Mixed Collections
+
+Feeds, search results, and morph queries mix model classes — `brewMixed()` brews each element with its own
+class's formula, order preserved:
+
+```php
+$feed = collect([$post, $comment, $anotherPost]);
+
+$brewed = Alchemist::brewMixed($feed, [
+    Post::class    => PostFormula::Summary,
+    Comment::class => CommentFormula::BodyOnly,
+]);
+// Classes omitted from the map fall back to their active formula / BlankParchment.
+```
+
+Plain `brew()` requires a homogeneous collection and now fails fast (pointing at `brewMixed()`) when given a
+mixed one.
+
+#### 5. One-Line Controllers
 
 `response()` brews anything — model, collection, or paginator — straight into a `JsonResponse`:
 
