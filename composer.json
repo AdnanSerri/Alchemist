@@ -34,7 +34,8 @@
       "Serri\\Alchemist\\Tests\\": "tests/"
     },
     "classmap": [
-      "tests/Fixtures/Formulas"
+      "tests/Fixtures/Formulas",
+      "tests/Fixtures/Octane"
     ]
   },
   "scripts": {

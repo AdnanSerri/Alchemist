@@ -14,6 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **`php artisan make:formula`** — generates formula classes into `formulas_folder_path` (finally giving that config key a purpose). `--model=Post` scans the model and pre-fills `BlankParchment` with its exposed fields, listing decorated methods as hints; `--force` overwrites. Creates the base `Formula` class when missing.
 - **`Alchemist::response($input, $formula, $status, $headers)`** — brews a model, collection, or paginator straight into a `JsonResponse`; paginators keep their pagination envelope.
 - `brewBatch()` now accepts simple (`simplePaginate`) and cursor (`cursorPaginate`) paginators in addition to length-aware ones.
+- **Laravel Octane safety**: formulas set via `setFormula()` now live in a central `FormulaRegistry` that the service provider flushes at every Octane request boundary, eliminating cross-request formula leakage in long-lived workers.
 
 ## [1.2.0] - 2026-07-07
 
