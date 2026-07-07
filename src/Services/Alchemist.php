@@ -116,7 +116,11 @@ class Alchemist
 
         [$sample, $handler] = $examined;
 
-        [$attributes, $activeFormula] = Druid::extract($sample, $configuration['ingredients']);
+        [$attributes, $activeFormula] = Druid::extract(
+            $sample,
+            $configuration['ingredients'],
+            $configuration['respect_hidden'] ?? true,
+        );
 
         return new BrewingContext(
             raw: $collection,

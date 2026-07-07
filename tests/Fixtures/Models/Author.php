@@ -19,7 +19,14 @@ class Author extends Model
         'last_name',
         'email',
         'email_verified_at',
+        'secret_token',
     ];
+
+    /**
+     * Fillable AND hidden on purpose: must never be exposed to formulas
+     * while respect_hidden is on.
+     */
+    protected $hidden = ['secret_token'];
 
     #[Mutagen]
     public function fullName(): string

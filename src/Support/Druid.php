@@ -54,23 +54,27 @@ final class Druid
     /**
      * Build the attribute map (exposed field name => ingredient class) and
      * fetch the sample model's active formula. The map is cached per model
-     * class and ingredient list; the formula is read fresh on every call,
-     * as it changes at runtime via setFormula().
+     * class, ingredient list, and hidden-respect flag; the formula is read
+     * fresh on every call, as it changes at runtime via setFormula().
+     *
+     * With $respectHidden (the default), fields listed in the model's
+     * $hidden property never enter the map — mirroring Eloquent's own
+     * serialisation contract.
      *
      * @param  array<int, class-string<IngredientContract>>  $ingredients
      * @return array{0: array<string, class-string<IngredientContract>>, 1: array<int, string>}
      *
      * @throws UnbrewableInputException
      */
-    public static function extract(Model $sample, array $ingredients): array
+    public static function extract(Model $sample, array $ingredients, bool $respectHidden = true): array
     {
         if (! method_exists($sample, 'formula')) {
             throw UnbrewableInputException::missingTrait(get_class($sample));
         }
 
-        $key = get_class($sample).'|'.implode(',', $ingredients);
+        $key = get_class($sample).'|'.($respectHidden ? 'h1' : 'h0').'|'.implode(',', $ingredients);
 
-        $attributes = self::$attributeMaps[$key] ??= self::buildAttributeMap($sample, $ingredients);
+        $attributes = self::$attributeMaps[$key] ??= self::buildAttributeMap($sample, $ingredients, $respectHidden);
 
         $formula = $sample::formula();
 
@@ -86,7 +90,7 @@ final class Druid
      * @param  array<int, class-string<IngredientContract>>  $ingredients
      * @return array<string, class-string<IngredientContract>>
      */
-    private static function buildAttributeMap(Model $sample, array $ingredients): array
+    private static function buildAttributeMap(Model $sample, array $ingredients, bool $respectHidden): array
     {
         $reflection = new ReflectionClass($sample);
 
@@ -100,6 +104,10 @@ final class Druid
             }
 
             $attributes = array_merge($attributes, array_fill_keys($fieldNames, $ingredient));
+        }
+
+        if ($respectHidden && $sample->getHidden() !== []) {
+            $attributes = array_diff_key($attributes, array_flip($sample->getHidden()));
         }
 
         return $attributes;

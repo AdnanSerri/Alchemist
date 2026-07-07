@@ -158,14 +158,20 @@ class FormulaLintCommand extends Command
             return;
         }
 
-        [$attributes] = Druid::extract(new $model, config('alchemist.ingredients'));
+        [$attributes] = Druid::extract(
+            new $model,
+            config('alchemist.ingredients'),
+            config('alchemist.respect_hidden', true),
+        );
 
         foreach ($normalised as $field => $nested) {
             if (! array_key_exists($field, $attributes)) {
                 $this->problems[] = [
                     'formula' => $model,
                     'constant' => $constant,
-                    'message' => "'$field' is not exposed on $model".$this->suggest($field, array_keys($attributes)),
+                    'message' => in_array($field, (new $model)->getHidden(), true)
+                        ? "'$field' is hidden on $model (\$hidden)"
+                        : "'$field' is not exposed on $model".$this->suggest($field, array_keys($attributes)),
                 ];
 
                 continue;

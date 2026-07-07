@@ -253,6 +253,10 @@ class Post extends Model
 > **Note:** Eloquent's default `$guarded = ['*']` wildcard is never treated as a field. If you rely on the default,
 > expose your columns through `$fillable`.
 
+> **`$hidden` is respected:** fields in a model's `$hidden` property are never exposed to formulas — matching
+> Eloquent's serialisation contract. A formula referencing one throws with a clear message. Deliberately brewing
+> hidden attributes requires setting `alchemist.respect_hidden` to `false`.
+
 ### 3. Exposing Relationships
 
 Relationships must be explicitly marked with the `#[Relation]` decorator to be available in formulas:
