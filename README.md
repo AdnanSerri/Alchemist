@@ -1,6 +1,7 @@
 # 🧙🏻‍♂️ Laravel Alchemist ⚗️
 
 [![Latest Version](https://img.shields.io/packagist/v/serri/alchemist.svg?style=flat-square)](https://packagist.org/packages/serri/alchemist)
+[![Tests](https://img.shields.io/github/actions/workflow/status/AdnanSerri/Alchemist/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/AdnanSerri/Alchemist/actions/workflows/tests.yml)
 [![License](https://img.shields.io/packagist/l/serri/alchemist.svg?style=flat-square)](https://packagist.org/packages/serri/alchemist)
 [![Total Downloads](https://img.shields.io/packagist/dt/serri/alchemist.svg?style=flat-square)](https://packagist.org/packages/serri/alchemist)
 
@@ -16,7 +17,11 @@
 4. [Fundamentals](#fundamentals)
 5. [Quick Start](#quick-start)
 6. [Usage & Examples](#usage-examples)
-7. [License](#license)
+7. [Custom Ingredients](#custom-ingredients)
+8. [Error Handling](#error-handling)
+9. [Testing](#testing)
+10. [Changelog](#changelog)
+11. [License](#license)
 
 ---
 
@@ -69,12 +74,14 @@ false dominion... and in its place conjures true magic.„*
 
 ---
 
-[//]: # (## ⚙️ Configuration)
-
 ## <a id="requirements"></a> 📋 Requirements
 
-- PHP ≥ 8.2
-- Laravel ≥ 11.x
+| Laravel | PHP   | Alchemist |
+|---------|-------|-----------|
+| 12.x    | ≥ 8.2 | ≥ 1.1     |
+| 13.x    | ≥ 8.3 | ≥ 1.1     |
+
+> Laravel 11 is supported by Alchemist 1.0.x only: it reached end of security support in March 2026 and is no longer maintained.
 
 ---
 
@@ -83,26 +90,26 @@ false dominion... and in its place conjures true magic.„*
 You may install Alchemist using the Composer package manager:
 
 ```shell
-  composer require serri/alchemist
+composer require serri/alchemist
 ```
 
 You can publish the Alchemist configuration file `config/alchemist.php` and the default `Formulas/Formula.php` using
-`vendor:publish` Artisan command:
+the `vendor:publish` Artisan command:
 
 ```shell
-   php artisan vendor:publish --provider="Serri\Alchemist\AlchemistServiceProvider"
+php artisan vendor:publish --provider="Serri\Alchemist\Providers\AlchemistServiceProvider"
 ```
 
-Or for configuration file using:
+Or for the configuration file only:
 
 ```shell
-   php artisan vendor:publish --tag=alchemist-config
+php artisan vendor:publish --tag=alchemist-config
 ```
 
-For default formula class using:
+For the default formula class only:
 
 ```shell
-    php artisan vendor:publish --tag=alchemist-formula
+php artisan vendor:publish --tag=alchemist-formula
 ```
 
 ---
@@ -115,7 +122,7 @@ To wield this package's magic effectively, you must understand these arcane prin
 
 - Your **sacred workshop** where all model formulas reside
 - Created automatically at `app/Formulas/Formula.php` when you publish the default formula class as we did in
-  the [Installtion](#installtion) Section:
+  the [Installation](#installation) section:
 
 ```php
 namespace App\Formulas;
@@ -137,9 +144,9 @@ class UserFormula extends Formula
 {
     # Define your transformations here.
     # ex:
-    
-    const UserLogin = ['id', 'username', /*...etc.*/]
-    
+
+    const UserLogin = ['id', 'username', /*...etc.*/];
+
     // ... other formulas.
 }
 ```
@@ -148,15 +155,15 @@ class UserFormula extends Formula
 > - #### Each model deserves its own formula class `ModelNameFormula.php` <br>
 > - #### The `BlankParchment` remains your fallback option.
 
-### Using package default Formula
+### Using the package's default Formula
 
-If you did not publish the `app/Formulas/Formula.php` , you can still use the default `Formula.php` provided by the package
+If you did not publish `app/Formulas/Formula.php`, you can still extend the default `Formula` provided by the package
 like this:
 
 ```php
 namespace App\Formulas;
 
-use Serri\Alchemist\Formulas\Formula
+use Serri\Alchemist\Formulas\Formula;
 
 class UserFormula extends Formula
 {
@@ -164,15 +171,13 @@ class UserFormula extends Formula
 }
 ```
 
-Relationships must be explicitly marked with the `#[Relation]` attribute to be available in formulas:
-
 ---
 
 ## <a id="quick-start"></a> 🪄 Quick Start
 
 ### 1. Model Configuration
 
-To enable formula support, models must use `HasAlchemyFormulas` Concern.
+To enable formula support, models must use the `HasAlchemyFormulas` concern.
 
 ```php
 use Serri\Alchemist\Concerns\HasAlchemyFormulas;
@@ -181,14 +186,14 @@ use Illuminate\Database\Eloquent\Model;
 class Post extends Model
 {
     use HasAlchemyFormulas;
-    
+
     //
 }
 ```
 
 ### 2. Exposing Fields
 
-By default, everything included in `$fillable` array and `$guarded` array are automatically loaded in formulas.
+By default, everything included in the `$fillable` array and the `$guarded` array is automatically available to formulas.
 
 ```php
 use Serri\Alchemist\Concerns\HasAlchemyFormulas;
@@ -197,18 +202,21 @@ use Illuminate\Database\Eloquent\Model;
 class Post extends Model
 {
     use HasAlchemyFormulas;
-    
+
     # Automatically exposed to formulas.
     protected $guarded = ['id'];
-    
+
     # Automatically exposed to formulas.
     protected $fillable = [
         'title',
         'description',
-        'published_at'
-    ]
+        'published_at',
+    ];
 }
 ```
+
+> **Note:** Eloquent's default `$guarded = ['*']` wildcard is never treated as a field. If you rely on the default,
+> expose your columns through `$fillable`.
 
 ### 3. Exposing Relationships
 
@@ -238,7 +246,7 @@ Model methods require the `#[Mutagen]` decorator to be accessible in formulas:
 use Serri\Alchemist\Decorators\Mutagen;
 
 #[Mutagen] # Exposed to formulas as 'fullName'
-public function fullName(): string 
+public function fullName(): string
 {
     return "{$this->first_name} {$this->last_name}";
 }
@@ -251,8 +259,9 @@ public function isVerified(): bool
 ```
 
 > #### Keynotes
-> - #### `$fillable` / `$guarded` : are available to use in formulas by default.
+> - #### `$fillable` / `$guarded` fields are available in formulas by default.
 > - #### **Decorators:** Only `#[Relation]` and `#[Mutagen]` methods are exposed to formulas.
+> - #### The `name` argument works positionally too: `#[Mutagen('is_verified')]`.
 
 ### 5. Crafting Formulas
 
@@ -267,15 +276,14 @@ namespace App\Formulas;
 class PostFormula extends Formula
 {
     const Author = ['id', 'title', 'author_profile'];
-    
-    const WithComments = ['id', 'title', 'comments']
-    
-    const Detailed = ['id', 'title', 'description', 'comments', 'author_profile'] 
-}
 
+    const WithComments = ['id', 'title', 'comments'];
+
+    const Detailed = ['id', 'title', 'description', 'comments', 'author_profile'];
+}
 ```
 
-For profile formula:
+For the profile formula:
 
 ```php
 namespace App\Formulas;
@@ -283,8 +291,8 @@ namespace App\Formulas;
 class ProfileFormula extends Formula
 {
     const OnlyName = ['fullName'];
-    
-    const AnyOther = ['id', 'username', 'fullName']
+
+    const AnyOther = ['id', 'username', 'fullName'];
 }
 ```
 
@@ -299,9 +307,10 @@ To transform model data using your formulas:
 ```php
 use App\Models\Post;
 use App\Formulas\PostFormula;
+use App\Formulas\ProfileFormula;
 use Serri\Alchemist\Facades\Alchemist;
 
-// 1. Fetch your models
+// 1. Fetch your models (eager-load the relations your formula uses!)
 $posts = Post::with('author.profile')->get();
 
 // 2. Specify which formulas to use
@@ -340,13 +349,17 @@ Results:
 ]
 ```
 
+> **Eager loading:** brewing a `#[Relation]` field accesses the relation on each model. Always eager-load
+> (`Post::with('comments')`) the relations your formula references, or you will trigger N+1 queries.
+
 ### Key Methods
 
-| Method         | Purpose                 | Example                                       |
- |----------------|-------------------------|-----------------------------------------------|
-| `setFormula()` | Assigns formula variant | `Post::setFormula(PostFormula::DetailedView)` |
-| `brew()`       | Executes transformation | `Alchemist::brew($collection\|$model)`        |
-| `brewBatch()`  | Executes transformation | `Alchemist::brewBatch($paginator)`            |
+| Method           | Purpose                                                | Example                                       |
+|------------------|--------------------------------------------------------|-----------------------------------------------|
+| `setFormula()`   | Assigns the model's active formula                     | `Post::setFormula(PostFormula::DetailedView)` |
+| `unsetFormula()` | Clears it, falling back to `BlankParchment`            | `Post::unsetFormula()`                        |
+| `brew()`         | Transforms a model or collection into an array         | `Alchemist::brew($collection\|$model)`        |
+| `brewBatch()`    | Transforms a paginator's items, keeping its metadata   | `Alchemist::brewBatch($paginator)`            |
 
 ### Patterns
 
@@ -354,8 +367,8 @@ Results:
 
 ```php
 $formula = auth()->user()->isAdmin()
-? PostFormula::AdminView
-: PostFormula::PublicView;
+    ? PostFormula::AdminView
+    : PostFormula::PublicView;
 
 Post::setFormula($formula);
 ```
@@ -364,6 +377,7 @@ Post::setFormula($formula);
 
 ```php
 $post = Post::find(1);
+
 return Alchemist::brew($post); // Auto-detects single model
 ```
 
@@ -371,6 +385,7 @@ return Alchemist::brew($post); // Auto-detects single model
 
 ```php
 $paginated = Post::paginate(15);
+
 return Alchemist::brewBatch($paginated); // Preserves pagination structure
 ```
 
@@ -398,9 +413,9 @@ use Serri\Alchemist\Services\Alchemist;
 
 class PostController
 {
-public function __construct(
-    protected Alchemist $alchemist
-) {}
+    public function __construct(
+        protected Alchemist $alchemist,
+    ) {}
 
     public function index()
     {
@@ -409,8 +424,108 @@ public function __construct(
 }
 ```
 
+All three resolve the same container singleton.
+
 ---
 
-## <a id="licesnse"></a> 📜 License
+## <a id="custom-ingredients"></a> 🧪 Custom Ingredients
+
+Ingredients are the strategies the Alchemist uses to resolve each formula field. The built-ins cover `$fillable`,
+`$guarded`, `#[Mutagen]`, and `#[Relation]` — but you can brew your own.
+
+An ingredient implements `Serri\Alchemist\Contracts\IngredientContract`:
+
+```php
+namespace App\Ingredients;
+
+use Serri\Alchemist\Contracts\IngredientContract;
+
+final class UppercaseIngredient implements IngredientContract
+{
+    /**
+     * The model property that lists the fields this ingredient resolves.
+     */
+    public static function ingredientName(): string
+    {
+        return 'shoutable';
+    }
+
+    /**
+     * Resolve one field on one model.
+     */
+    public static function infuse(string $ingredient, mixed $brewing): array
+    {
+        return [
+            $ingredient => strtoupper($brewing[$ingredient]),
+        ];
+    }
+}
+```
+
+Register it in `config/alchemist.php`:
+
+```php
+'ingredients' => [
+    \Serri\Alchemist\Ingredients\FillableIngredient::class,
+    \Serri\Alchemist\Ingredients\GuardedIngredient::class,
+    \Serri\Alchemist\Ingredients\MutagenIngredient::class,
+    \Serri\Alchemist\Ingredients\RelationIngredient::class,
+
+    \App\Ingredients\UppercaseIngredient::class,
+],
+```
+
+Then list the fields on your model:
+
+```php
+class Post extends Model
+{
+    use HasAlchemyFormulas;
+
+    protected array $shoutable = ['title'];
+}
+```
+
+Rules of the craft:
+
+- **Order matters:** when two ingredients expose the same field name, the one registered **later** wins.
+- Models without the ingredient's property simply contribute no fields for it — no error.
+- Decorator-driven ingredients (like the built-in Mutagen/Relation) additionally implement a static
+  `usesDecorator(): bool` returning `true`, and `ingredientName()` returns the attribute class to scan for.
+
+---
+
+## <a id="error-handling"></a> 🚨 Error Handling
+
+Everything the Alchemist throws extends `Serri\Alchemist\Exceptions\AlchemistException`, so one catch covers all:
+
+| Exception                       | Thrown when                                                                  |
+|---------------------------------|------------------------------------------------------------------------------|
+| `UnknownFormulaFieldException`  | A formula references a field the model does not expose (typo, or forgotten decorator). |
+| `UnbrewableInputException`      | The input collection contains non-models, or the model lacks the `HasAlchemyFormulas` trait. |
+| `InvalidConfigurationException` | The `alchemist` config is missing or malformed.                              |
+| `InvalidIngredientException`    | A configured ingredient class does not exist or lacks `infuse()`.            |
+
+---
+
+## <a id="testing"></a> 🧬 Testing
+
+```shell
+composer test       # PHPUnit (unit + feature suites)
+composer lint       # Pint code style check
+composer analyse    # PHPStan level 6
+```
+
+The CI matrix runs the suite on PHP 8.2–8.4 across Laravel 12 and 13.
+
+---
+
+## <a id="changelog"></a> 📆 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history and upgrade notes.
+
+---
+
+## <a id="license"></a> 📜 License
 
 This project is open-source and available under the **MIT License**.

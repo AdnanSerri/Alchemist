@@ -67,5 +67,5 @@ All failures throw subclasses of `Exceptions\AlchemistException`: `InvalidConfig
 
 - `@internal` classes (`BrewingContext`, `Druid`, handlers, resolver, config loader) are not part of the public API; the public surface is the service/facade/helper, the trait, the decorators, and `IngredientContract`.
 - The attribute map is built from the collection's **first model only** — mixed-model collections are not supported.
-- Releases are cut by git tag only (`v1.0.0`–`v1.0.3` so far); `composer.json` intentionally has no `version` field and `composer.lock` is gitignored.
-- README documents behaviour that the code must keep matching (e.g. publish tags, `BlankParchment` fallback law). It still claims Laravel ≥ 11 and has a broken `vendor:publish --provider` path — pending README fixes are tracked in the enhancement plan (Phase 5).
+- Releases are cut by git tag (`v1.1.0` is the latest); `composer.json` intentionally has no `version` field and `composer.lock` is gitignored. Cut the `[Unreleased]` changelog section into a version heading as part of each release.
+- README documents behaviour that the code must keep matching (publish tags, `BlankParchment` fallback law, the custom-ingredient contract, the exceptions table) — update it in the same PR as any public-API change.
