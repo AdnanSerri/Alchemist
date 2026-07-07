@@ -135,7 +135,20 @@ class Formula
 
 ### Crafting Your Formulas
 
-Begin your alchemy by creating formula classes in `app/Formulas/` like so:
+Summon a formula class with the generator:
+
+```shell
+php artisan make:formula PostFormula
+
+# Or scan a model: pre-fills BlankParchment with its exposed fields and
+# lists its #[Mutagen] / #[Relation] methods as hints.
+php artisan make:formula PostFormula --model=Post
+```
+
+The generator writes to your configured `formulas_folder_path` (default `app/Formulas/`), creates the base
+`Formula` class if it is missing, and refuses to overwrite an existing formula unless you pass `--force`.
+
+Or craft one by hand in `app/Formulas/` like so:
 
 ```php
 namespace App\Formulas;

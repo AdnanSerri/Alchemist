@@ -1,0 +1,11 @@
+<?php
+
+namespace App\Formulas;
+
+class {{ class }} extends Formula
+{
+    const BlankParchment = [
+{{ fields }}
+    ];
+{{ hints }}
+}

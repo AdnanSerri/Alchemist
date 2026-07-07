@@ -11,6 +11,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - **Nested formula specs**: formula arrays may pin a relation's formula inline (`'comments' => CommentFormula::BodyOnly`), recursively. Plain string entries keep resolving through the related model's own formula, so all existing formulas remain valid.
 - `Contracts\AcceptsNestedFormula` — opt-in interface for custom ingredients that can brew a field with a caller-provided nested formula.
 - `Exceptions\InvalidFormulaException` — thrown for malformed formula entries and nested specs on non-relation fields.
+- **`php artisan make:formula`** — generates formula classes into `formulas_folder_path` (finally giving that config key a purpose). `--model=Post` scans the model and pre-fills `BlankParchment` with its exposed fields, listing decorated methods as hints; `--force` overwrites. Creates the base `Formula` class when missing.
 
 ## [1.2.0] - 2026-07-07
 

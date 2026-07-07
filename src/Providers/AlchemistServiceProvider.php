@@ -3,6 +3,7 @@
 namespace Serri\Alchemist\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Serri\Alchemist\Console\MakeFormulaCommand;
 use Serri\Alchemist\Services\Alchemist;
 
 class AlchemistServiceProvider extends ServiceProvider
@@ -10,6 +11,10 @@ class AlchemistServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->registerPublishing();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([MakeFormulaCommand::class]);
+        }
     }
 
     public function register(): void
