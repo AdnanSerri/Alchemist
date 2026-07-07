@@ -1,4 +1,6 @@
 /.phpunit.cache
+composer.lock
+/build
 /node_modules
 /public/build
 /public/hot
