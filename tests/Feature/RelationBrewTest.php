@@ -78,7 +78,7 @@ class RelationBrewTest extends TestCase
         $this->assertSame([], $brewed['comments']);
     }
 
-    public function test_a_null_belongs_to_relation_brews_to_an_empty_array(): void
+    public function test_a_null_belongs_to_relation_brews_to_null(): void
     {
         $post = $this->createPost(['author_id' => null]);
 
@@ -86,7 +86,8 @@ class RelationBrewTest extends TestCase
 
         $brewed = alchemist()->brew($post->load('author'));
 
-        $this->assertSame([], $brewed['writer']);
+        $this->assertArrayHasKey('writer', $brewed);
+        $this->assertNull($brewed['writer']);
     }
 
     public function test_relation_heavy_collections_brew_correctly(): void

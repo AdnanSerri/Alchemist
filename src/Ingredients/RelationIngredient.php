@@ -23,18 +23,30 @@ final class RelationIngredient implements AcceptsNestedFormula, IngredientContra
     public static function infuse(string $ingredient, mixed $brewing): array
     {
         $relationName = self::getRelationName($brewing, $ingredient);
+        $related = $brewing->$relationName;
+
+        // A null to-one relation (belongsTo/hasOne/morphOne) brews to null,
+        // not []; an empty to-many is an empty collection and still brews to [].
+        if ($related === null) {
+            return [$ingredient => null];
+        }
 
         return [
-            $ingredient => app(Alchemist::class)->brew($brewing->$relationName),
+            $ingredient => app(Alchemist::class)->brew($related),
         ];
     }
 
     public static function infuseWithFormula(string $ingredient, mixed $brewing, array $formula): array
     {
         $relationName = self::getRelationName($brewing, $ingredient);
+        $related = $brewing->$relationName;
+
+        if ($related === null) {
+            return [$ingredient => null];
+        }
 
         return [
-            $ingredient => app(Alchemist::class)->brew($brewing->$relationName, $formula),
+            $ingredient => app(Alchemist::class)->brew($related, $formula),
         ];
     }
 
